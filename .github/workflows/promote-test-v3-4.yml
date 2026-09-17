@@ -1,0 +1,47 @@
+name: Promote TEST v3.4 to LIVE
+on:
+  push:
+    paths:
+      - '.github/workflows/promote-test-v3-4.yml'
+permissions:
+  contents: write
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch TEST site
+        run: |
+          git clone --depth 1 https://github.com/gunpowderstudios/website-test.git /tmp/website-test
+      - name: Sync TEST to LIVE without staging editor
+        run: |
+          rsync -a /tmp/website-test/ ./ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'staging-editor.js'
+          rm -f staging-editor.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for path in Path('.').rglob('*.html'):
+              text = path.read_text(encoding='utf-8')
+              text = re.sub(r'\s*<script[^>]*src=["\'][^"\']*staging-editor\.js["\'][^>]*></script>\s*', '\n', text, flags=re.I)
+              text = text.replace('STAGING · ', '')
+              text = text.replace('STAGING ·', '')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Remove temporary workflow and commit
+        run: |
+          git rm .github/workflows/promote-test-v3-4.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No site changes to promote"
+            exit 0
+          fi
+          git commit -m "v3.4 - promote TEST to LIVE without editor"
+          git push

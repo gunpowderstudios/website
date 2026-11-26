@@ -22,6 +22,11 @@ section{padding:5.5rem 0}.intro{display:grid;grid-template-columns:.95fr 1.05fr;
 footer{background:#081014;color:#9fb0ae;padding:2.8rem 0}.foot{display:flex;justify-content:space-between;gap:2rem;align-items:center}.foot a{color:#d6e4de;text-decoration:none;font-weight:800}
 @media(max-width:900px){.hero-grid,.intro{grid-template-columns:1fr;gap:2.5rem}.hero-grid{padding:40px 0 80px}.hero-art{max-width:650px}.facts{grid-template-columns:repeat(3,1fr)}.steps{grid-template-columns:repeat(2,1fr)}.world-grid{grid-template-columns:1fr}.gallery{grid-template-columns:1fr}.buy-strip{flex-direction:column;align-items:flex-start}}
 @media(max-width:720px){.devbar{font-size:.7rem;text-align:left;padding-left:18px}.menu{display:block}.links{display:none;position:absolute;left:18px;right:18px;top:72px;flex-direction:column;align-items:stretch;background:#101d21;padding:1rem;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.links.open{display:flex}.links a{padding:.55rem .7rem}.shop{text-align:center}.brand span{font-size:.84rem}.hero-grid{padding:40px 0 78px}h1{font-size:clamp(3.1rem,15vw,5.2rem)}section{padding:4rem 0}.hero-art{min-height:360px}.facts,.steps{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:1rem}.foot{display:block}.foot div+div{margin-top:1rem}}
+
+/* Match Amazon and Etsy header button widths */
+nav a.nav-cta, nav.links a.pill.amazon, nav.links a.pill.etsy, nav.links a.shop.amazon, nav.links a.shop.etsy {display:inline-flex;align-items:center;justify-content:center;width:210px;min-height:50px;box-sizing:border-box;text-align:center;flex-shrink:0;white-space:nowrap}
+@media(max-width:900px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:170px}}
+@media(max-width:720px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:100%;min-height:48px}}
 </style>
 </head>
 <body>

@@ -29,6 +29,11 @@ footer{background:#0d0c0a;color:#bfb4a2;padding:3.5rem 0 2rem}.footer-grid{displ
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:2rem;padding:40px 0 7rem}.hero-image-card{max-width:620px}.feature-main,.feature-book,.feature-forest,.feature-legends{grid-column:span 12;min-height:360px}.games-grid{grid-template-columns:repeat(2,1fr)}.why{grid-template-columns:1fr;gap:2.5rem}.seal{width:280px}.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>div:first-child{grid-column:span 2}.cta{grid-template-columns:1fr;align-items:end}.cta-side{align-items:flex-start}.cta:before{background:linear-gradient(90deg,rgba(39,8,7,.9),rgba(39,8,7,.58))}}
 @media (max-width:720px){.topbar{font-size:.75rem}.topbar:after{right:7px;font-size:.6rem}.menu-btn{display:block}nav{display:none;position:absolute;left:18px;right:18px;top:72px;background:#f8f1e4;border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:var(--shadow);flex-direction:column;align-items:stretch}nav.open{display:flex}nav a{padding:.55rem .7rem}.nav-cta{text-align:center}.brand span{font-size:.85rem}h1{font-size:clamp(3.1rem,15vw,5.2rem)}.hero{min-height:auto}.hero-grid{padding:40px 0 7rem}.hero-controls{bottom:20px;gap:.55rem}.hero-arrow{width:40px;height:40px}.section-head{display:block}.section-head p{margin-top:1rem}section{padding:4rem 0}.games-grid{grid-template-columns:1fr}.ticks{grid-template-columns:1fr}.cta{min-height:330px;margin-bottom:4rem}.footer-grid{grid-template-columns:1fr}.footer-grid>div:first-child{grid-column:auto}}
 @media (prefers-reduced-motion:reduce){.hero-track{transition:none}.btn,.game-card{transition:none}}
+
+/* Match Amazon and Etsy header button widths */
+nav a.nav-cta, nav.links a.pill.amazon, nav.links a.pill.etsy, nav.links a.shop.amazon, nav.links a.shop.etsy {display:inline-flex;align-items:center;justify-content:center;width:210px;min-height:50px;box-sizing:border-box;text-align:center;flex-shrink:0;white-space:nowrap}
+@media(max-width:900px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:170px}}
+@media(max-width:720px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:100%;min-height:48px}}
 </style>
 </head>
 <body>

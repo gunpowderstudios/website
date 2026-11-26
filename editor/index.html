@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Website Editor | Gunpowder Studios</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#241e17;background:#efe8db}
+*{box-sizing:border-box}body{margin:0}.header{background:#181410;color:#fff2dc;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.header h1{font-size:1.1rem;margin:0}.header a{color:#fff2dc;text-decoration:none;font-weight:700}
+.frame{display:grid;grid-template-columns:minmax(280px,350px) 1fr;min-height:calc(100vh - 62px)}
+aside{background:#fffaf1;border-right:1px solid #d7cbb8;padding:20px;overflow:auto}
+main{padding:12px;min-width:0}.preview{background:white;border:1px solid #d7cbb8;border-radius:12px;overflow:hidden;height:calc(100vh - 94px)}
+iframe{width:100%;height:100%;border:0;background:white}h2{font-size:1.05rem;margin:0 0 12px}p{font-size:.88rem;line-height:1.5}label{display:block;margin:12px 0 5px;font-size:.82rem;font-weight:800}
+input,textarea,select,button{font:inherit}input:not([type=file]),textarea,select{width:100%;border:1px solid #cbbca7;border-radius:8px;background:#fff;padding:10px}
+textarea{min-height:138px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:9px;padding:11px 14px;background:#a62b22;color:white;font-weight:800;cursor:pointer}
+button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:.78rem;color:#66594b}.status{padding:10px;margin:12px 0;border-radius:8px;background:#ede7db;font-size:.82rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.status.ok{background:#e0efdf;color:#245629}.status.error{background:#fae0d9;color:#812c22}
+.hidden{display:none!important}hr{border:0;border-top:1px solid #e2d6c4;margin:20px 0}
+.thumb{max-width:100%;max-height:150px;object-fit:contain;background:#f2eee8;border-radius:8px}
+.topnote{background:#fff2d0;padding:10px;border-radius:8px}
+@media(max-width:770px){.frame{display:block}aside{max-height:none}.preview{height:70vh}}
+</style>
+</head>
+<body>
+<div class="header"><h1>Gunpowder Studios · Website Editor</h1><a href="../">← View website</a></div>
+<div class="frame">
+<aside>
+<h2>1. Connect to GitHub</h2>
+<p class="note">Use a <strong>fine-grained personal access token</strong> for <code>gunpowderstudios/website</code>, with <strong>Contents: Read and write</strong>. The token stays in this browser tab's memory and is never saved in the website or sent anywhere except GitHub.</p>
+<label for="token">GitHub access token</label>
+<input id="token" type="password" autocomplete="off" placeholder="github_pat_...">
+<div class="actions"><button id="connect">Connect</button><button class="secondary" id="disconnect">Disconnect</button></div>
+<p class="note"><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a limited GitHub token</a> (choose only the website repository, Contents read/write, and a short expiry). Anyone may open this editor page, but only someone with repository write access can publish.</p>
+<hr>
+<h2>2. Choose a page</h2>
+<label for="page">Page</label>
+<select id="page">
+<option value="index.html">Homepage</option>
+<option value="book-of-dungeon/index.html">Book of Dungeon</option>
+<option value="kastles-card-game/index.html">Kastles</option>
+<option value="bag-of-dungeon/index.html">Bag of Dungeon</option>
+<option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option>
+<option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option>
+<option value="7-moons/index.html">7 Moons</option>
+<option value="rabbito/index.html">Rabbito</option>
+<option value="cheese/index.html">Who Stole My Cheese?</option>
+<option value="coming-soon/index.html">Coming Soon</option>
+<option value="about-us/index.html">About Us</option>
+<option value="contact-us/index.html">Contact Us</option>
+<option value="shop/index.html">Shop</option>
+</select>
+<div class="actions"><button id="load" class="secondary">Load page</button></div>
+<hr>
+<h2>3. Click text or an image in the preview</h2>
+<p class="note">Click a heading, paragraph or image on the right, then edit it here. The preview updates immediately. Navigation links cannot be edited in this basic version.</p>
+<div id="noSelection" class="topnote note">Nothing selected yet. Open a page and click its text or image.</div>
+<div id="textEditor" class="hidden">
+<label for="textValue">Selected text</label>
+<textarea id="textValue"></textarea>
+<p class="note">For paragraphs containing bold or inline styling, replacing the text removes that paragraph's inline formatting.</p>
+<button id="applyText" class="secondary">Update preview</button>
+</div>
+<div id="imageEditor" class="hidden">
+<img id="thumb" class="thumb" alt="Selected preview image">
+<label for="imageAlt">Image description (SEO alt text)</label>
+<input id="imageAlt" type="text" placeholder="Describe what is shown">
+<label for="imageFile">Replace image</label>
+<input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif">
+<p class="note">Photos and artwork are converted to WebP, up to 2,000px wide, and named with the page name for SEO. Animated GIFs become a still image.</p>
+<button id="applyAlt" class="secondary">Update image description</button>
+</div>
+<hr>
+<h2>4. Publish changes</h2>
+<p class="note">Save creates a GitHub commit. Changes typically appear after GitHub Pages deploys. The existing <code>noindex</code> setting is preserved.</p>
+<div class="actions"><button id="save" disabled>Save changes to GitHub</button><button id="reset" class="secondary" disabled>Discard edits</button></div>
+<div id="status" class="status">Not connected.</div>
+</aside>
+<main><div class="preview"><iframe id="preview" title="Website page preview" sandbox="allow-same-origin"></iframe></div></main>
+</div>
+<script>
+"use strict";
+const OWNER="gunpowderstudios",REPO="website",BRANCH="main";
+const $=id=>document.getElementById(id);
+let token="",pageDoc=null,originalSha="",active=null,dirty=false,uploads=[],renderedURL=[];
+const opts={headers:()=>({"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"})};
+const api=p=>"https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+p;
+function message(t,type=""){$("status").textContent=t;$("status").className="status "+type}
+function enableSave(){$("save").disabled=!(token&&pageDoc&&dirty);$("reset").disabled=!pageDoc}
+function toBase64(buffer){let bytes=new Uint8Array(buffer),s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)}
+async function github(path,method="GET",body=null){
+ const response=await fetch(api(path),{method,headers:{...opts.headers(),...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined,cache:"no-store"});
+ let json={};try{json=await response.json()}catch{}
+ if(!response.ok)throw Error((json.message||"GitHub request failed")+" ("+response.status+")");
+ return json;
+}
+function clearEdit(){active=null;$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value=""}
+function pageBase(){return "https://"+OWNER+".github.io/"+REPO+"/"+$("page").value.replace(/index\.html$/,"")}
+function selectable(el){if(!el||el.closest("header,nav,footer,script,style,button,a"))return false;return !!el.closest("main")}
+function editableList(doc){return [...doc.querySelectorAll("main h1,main h2,main h3,main h4,main p,main figcaption,main img")].filter(el=>el.tagName==="IMG"||!el.querySelector("img,a,button"))}
+function bindPreview(){
+ const f=$("preview"),d=f.contentDocument;if(!d)return;
+ let st=d.createElement("style");st.textContent="[data-editor-id]{cursor:pointer!important}[data-editor-id]:hover{outline:3px dashed #f89317!important;outline-offset:3px}[data-editor-id].editor-picked{outline:4px solid #ff8125!important;outline-offset:3px}";d.head.append(st);
+ d.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const el=e.target.closest("[data-editor-id]");if(!el)return;choose(el.dataset.editorId)},true);
+}
+function draw(){
+ if(!pageDoc)return;
+ renderedURL.forEach(u=>URL.revokeObjectURL(u));renderedURL=[];
+ const cloned=pageDoc.cloneNode(true);
+ let base=cloned.createElement("base");base.href=pageBase();cloned.head.prepend(base);
+ const elements=editableList(cloned);
+ elements.forEach((el,i)=>{el.dataset.editorId=String(i);if(el.tagName==="IMG"&&el.dataset.pendingUpload){let upload=uploads.find(u=>u.path===el.dataset.pendingUpload);if(upload){let blobURL=URL.createObjectURL(upload.blob);renderedURL.push(blobURL);el.removeAttribute("onerror");el.src=blobURL;}}});
+ $("preview").srcdoc="<!doctype html>\n"+cloned.documentElement.outerHTML;
+ $("preview").onload=bindPreview;
+}
+function choose(id){
+ const els=editableList(pageDoc),el=els[Number(id)];if(!el)return;
+ active=el;$("noSelection").classList.add("hidden");
+ $("textEditor").classList.toggle("hidden",el.tagName==="IMG");
+ $("imageEditor").classList.toggle("hidden",el.tagName!=="IMG");
+ if(el.tagName==="IMG"){$("imageAlt").value=el.alt||"";$("thumb").src=el.dataset.pendingUpload?(URL.createObjectURL(uploads.find(u=>u.path===el.dataset.pendingUpload).blob)):new URL(el.getAttribute("src")||"",pageBase()).href}
+ else $("textValue").value=el.textContent.trim();
+ const d=$("preview").contentDocument;if(d){d.querySelectorAll(".editor-picked").forEach(n=>n.classList.remove("editor-picked"));let selected=d.querySelector('[data-editor-id="'+id+'"]');if(selected)selected.classList.add("editor-picked")}
+}
+function refreshSelection(){let id=editableList(pageDoc).indexOf(active);draw();if(id>=0)setTimeout(()=>choose(id),100)}
+async function load(){
+ if(!token){message("Connect using a GitHub token first.","error");return}
+ if(dirty&&!confirm("Discard unsaved edits and load another page?"))return;
+ try{message("Loading page from GitHub…");const path=$("page").value;const result=await github(path);originalSha=result.sha;
+ const html=decodeURIComponent(Array.from(atob(result.content.replace(/\s/g,"")),x=>"%"+x.charCodeAt(0).toString(16).padStart(2,"0")).join(""));
+ pageDoc=new DOMParser().parseFromString(html,"text/html");uploads=[];dirty=false;clearEdit();draw();enableSave();message("Page loaded. Click any heading, paragraph or picture to edit.","ok");
+ }catch(e){message(e.message,"error")}
+}
+$("connect").onclick=async()=>{const v=$("token").value.trim();if(!v){message("Enter a GitHub token.","error");return}token=v;$("token").value="";try{await load();}catch(e){token="";message(e.message,"error")}};
+$("disconnect").onclick=()=>{token="";pageDoc=null;originalSha="";dirty=false;uploads=[];$("preview").srcdoc="";clearEdit();enableSave();message("Disconnected. No access token is stored.","ok")};
+$("load").onclick=load;
+$("page").onchange=()=>{if(!token)return;load()};
+$("applyText").onclick=()=>{if(!active||active.tagName==="IMG")return;active.textContent=$("textValue").value;dirty=true;refreshSelection();enableSave();message("Text changed in preview. Click Save changes to publish.")};
+$("textValue").addEventListener("input",()=>{if(!active||active.tagName==="IMG")return;active.textContent=$("textValue").value;dirty=true;enableSave();let idx=editableList(pageDoc).indexOf(active),el=$("preview").contentDocument?.querySelector('[data-editor-id="'+idx+'"]');if(el)el.textContent=$("textValue").value});
+$("applyAlt").onclick=()=>{if(!active||active.tagName!=="IMG")return;active.alt=$("imageAlt").value;dirty=true;enableSave();message("SEO image description updated. Save to publish.","ok")};
+$("imageAlt").addEventListener("input",()=>{if(active&&active.tagName==="IMG"){active.alt=$("imageAlt").value;dirty=true;enableSave()}});
+$("imageFile").onchange=async e=>{
+ const file=e.target.files[0];if(!file||!active||active.tagName!=="IMG")return;
+ if(file.size>25*1024*1024){message("Please choose an image smaller than 25MB.","error");return}
+ try{
+  message("Preparing optimised image…");
+  const bitmap=await createImageBitmap(file),scale=Math.min(1,2000/bitmap.width),canvas=document.createElement("canvas");
+  canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);
+  canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error("Image conversion failed")),"image/webp",.88));
+  const slug=$("page").value.split("/")[0].replace(/\.html$/,"home");
+  const filename=slug+"-"+file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,45)+"-"+Date.now().toString(36)+".webp";
+  const path="images/uploads/"+filename;
+  uploads=uploads.filter(u=>u.path!==active.dataset.pendingUpload);
+  uploads.push({path,blob});
+  active.src=($("page").value==="index.html"?"":"../")+path;
+  active.dataset.pendingUpload=path;
+  active.removeAttribute("onerror");active.removeAttribute("data-fallback");active.removeAttribute("data-png");
+  const anchor=active.closest("a");if(anchor&&anchor.querySelectorAll("img").length===1)anchor.href=active.getAttribute("src");
+  if(!$("imageAlt").value.trim()){$("imageAlt").value=file.name.replace(/\.[^.]+$/,"").replace(/[-_]/g," ");active.alt=$("imageAlt").value}
+  dirty=true;enableSave();refreshSelection();
+  message("Image ready ("+Math.round(blob.size/1024)+" KB). Save changes to upload it and publish the page.","ok");
+ }catch(err){message("Could not prepare image: "+err.message,"error")}
+};
+$("reset").onclick=()=>load();
+$("save").onclick=async()=>{
+ if(!token||!pageDoc||!dirty)return;
+ $("save").disabled=true;
+ try{
+  for(let i=0;i<uploads.length;i++){
+   const u=uploads[i];message("Uploading image "+(i+1)+" of "+uploads.length+"…");
+   await github(u.path,"PUT",{message:"Add website image "+u.path.split("/").pop(),content:toBase64(await u.blob.arrayBuffer()),branch:BRANCH});
+  }
+  const exportDoc=pageDoc.cloneNode(true);exportDoc.querySelectorAll("[data-pending-upload]").forEach(e=>e.removeAttribute("data-pending-upload"));
+  const cleaned="<!doctype html>\n"+exportDoc.documentElement.outerHTML+"\n";
+  const data=toBase64(new TextEncoder().encode(cleaned));
+  message("Publishing page to GitHub…");
+  const result=await github($("page").value,"PUT",{message:"Update "+$("page").value+" using website visual editor",content:data,sha:originalSha,branch:BRANCH});
+  originalSha=result.content.sha;uploads=[];dirty=false;pageDoc=exportDoc;enableSave();draw();
+  message("Saved to GitHub successfully! The updated page will appear after the Pages deployment completes.","ok");
+ }catch(e){enableSave();message("Could not finish saving: "+e.message+"\nIf some images were uploaded, they are safely stored in GitHub; retry after checking the page.","error")}
+};
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+</script>
+</body>
+</html>

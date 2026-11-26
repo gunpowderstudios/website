@@ -56,8 +56,8 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 <div class="actions"><button id="load" class="secondary">Load page</button></div>
 <hr>
 <h2>3. Click text or an image in the preview</h2>
-<p class="note">Click a heading, paragraph or image on the right, then edit it here. The preview updates immediately. Navigation links cannot be edited in this basic version.</p>
-<div id="noSelection" class="topnote note">Nothing selected yet. Open a page and click its text or image.</div>
+<p class="note">Your selected page is displayed on the right. Connect to GitHub to click and edit its headings, paragraphs and images. The preview updates immediately as you edit. Navigation links cannot be edited in this basic version.</p>
+<div id="noSelection" class="topnote note">Choose a page to preview it. Connect to GitHub to make edits.</div>
 <div id="textEditor" class="hidden">
 <label for="textValue">Selected text</label>
 <textarea id="textValue"></textarea>
@@ -98,7 +98,8 @@ async function github(path,method="GET",body=null){
  return json;
 }
 function clearEdit(){active=null;$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value=""}
-function pageBase(){return "https://"+OWNER+".github.io/"+REPO+"/"+$("page").value.replace(/index\.html$/,"")}
+function pageBase(){return new URL("../"+$("page").value.replace(/index\.html$/,""),location.href).href}
+function showPublicPreview(){const f=$("preview");f.removeAttribute("srcdoc");f.onload=null;f.src=pageBase()}
 function selectable(el){if(!el||el.closest("header,nav,footer,script,style,button,a"))return false;return !!el.closest("main")}
 function editableList(doc){return [...doc.querySelectorAll("main h1,main h2,main h3,main h4,main p,main figcaption,main img")].filter(el=>el.tagName==="IMG"||!el.querySelector("img,a,button"))}
 function bindPreview(){
@@ -135,9 +136,9 @@ async function load(){
  }catch(e){message(e.message,"error")}
 }
 $("connect").onclick=async()=>{const v=$("token").value.trim();if(!v){message("Enter a GitHub token.","error");return}token=v;$("token").value="";try{await load();}catch(e){token="";message(e.message,"error")}};
-$("disconnect").onclick=()=>{token="";pageDoc=null;originalSha="";dirty=false;uploads=[];$("preview").srcdoc="";clearEdit();enableSave();message("Disconnected. No access token is stored.","ok")};
-$("load").onclick=load;
-$("page").onchange=()=>{if(!token)return;load()};
+$("disconnect").onclick=()=>{token="";pageDoc=null;originalSha="";dirty=false;uploads=[];clearEdit();enableSave();showPublicPreview();message("Disconnected. Preview is available without a GitHub login.","ok")};
+$("load").onclick=()=>{if(token)load();else{showPublicPreview();message("Preview loaded. Connect to GitHub to edit.","ok")}};
+$("page").onchange=()=>{if(token){load()}else{clearEdit();showPublicPreview();message("Showing page preview. Connect to GitHub to edit.","ok")}};
 $("applyText").onclick=()=>{if(!active||active.tagName==="IMG")return;active.textContent=$("textValue").value;dirty=true;refreshSelection();enableSave();message("Text changed in preview. Click Save changes to publish.")};
 $("textValue").addEventListener("input",()=>{if(!active||active.tagName==="IMG")return;active.textContent=$("textValue").value;dirty=true;enableSave();let idx=editableList(pageDoc).indexOf(active),el=$("preview").contentDocument?.querySelector('[data-editor-id="'+idx+'"]');if(el)el.textContent=$("textValue").value});
 $("applyAlt").onclick=()=>{if(!active||active.tagName!=="IMG")return;active.alt=$("imageAlt").value;dirty=true;enableSave();message("SEO image description updated. Save to publish.","ok")};
@@ -183,6 +184,8 @@ $("save").onclick=async()=>{
   message("Saved to GitHub successfully! The updated page will appear after the Pages deployment completes.","ok");
  }catch(e){enableSave();message("Could not finish saving: "+e.message+"\nIf some images were uploaded, they are safely stored in GitHub; retry after checking the page.","error")}
 };
+showPublicPreview();
+message("Showing homepage preview. Choose another page or connect to GitHub to edit.");
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
 </script>
 </body>

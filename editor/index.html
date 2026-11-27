@@ -20,7 +20,7 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 .note{font-size:.78rem;color:#66594b}.status{padding:10px;margin:12px 0;border-radius:8px;background:#ede7db;font-size:.82rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .status.ok{background:#e0efdf;color:#245629}.status.error{background:#fae0d9;color:#812c22}
 .hidden{display:none!important}hr{border:0;border-top:1px solid #e2d6c4;margin:20px 0}
-.thumb{max-width:100%;max-height:150px;object-fit:contain;background:#f2eee8;border-radius:8px}
+.thumb{max-width:100%;max-height:150px;object-fit:contain;background:#f2eee8;border-radius:8px}input[type=range]{width:100%;accent-color:#a62b22}
 .topnote{background:#fff2d0;padding:10px;border-radius:8px}
 @media(max-width:770px){.frame{display:block}aside{max-height:none}.preview{height:70vh}}
 </style>
@@ -62,6 +62,10 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 <label for="textValue">Selected text</label>
 <textarea id="textValue"></textarea>
 <p class="note">For paragraphs containing bold or inline styling, replacing the text removes that paragraph's inline formatting.</p>
+<label for="elementType">Text style</label><select id="elementType"><option value="P">Paragraph</option><option value="H1">Heading 1 (H1)</option><option value="H2">Heading 2 (H2)</option><option value="H3">Heading 3 (H3)</option><option value="H4">Heading 4 (H4)</option></select>
+<label for="fontSize">Text size (px, optional)</label><input id="fontSize" type="number" min="10" max="120" placeholder="Page default">
+<div class="actions"><button class="secondary" id="alignLeft">Align left</button><button class="secondary" id="alignCenter">Centre</button><button class="secondary" id="alignRight">Align right</button></div>
+<label for="textWidth">Text box maximum width (%)</label><input id="textWidth" type="range" min="35" max="100" value="100"><span id="textWidthLabel" class="note">100%</span>
 <button id="applyText" class="secondary">Update preview</button>
 </div>
 <div id="imageEditor" class="hidden">
@@ -71,9 +75,17 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 <label for="imageFile">Replace image</label>
 <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif">
 <p class="note">Photos and artwork are converted to WebP, up to 2,000px wide, and named with the page name for SEO. Animated GIFs become a still image.</p>
+<label for="imageWidth">Image width (%)</label><input type="range" id="imageWidth" min="20" max="100" value="100"><span id="imageWidthLabel" class="note">100%</span>
+<div class="actions"><button class="secondary" id="imageLeft">Align left</button><button class="secondary" id="imageCenter">Centre</button><button class="secondary" id="imageRight">Align right</button></div>
+<label for="imageFit">Image fit</label><select id="imageFit"><option value="contain">Show full image</option><option value="cover">Fill image frame</option></select>
 <button id="applyAlt" class="secondary">Update image description</button>
 </div>
-<hr>
+<div id="layoutEditor" class="hidden"><hr><h2>Position and spacing</h2>
+<p class="note">Move a block within its existing section. Some page layouts constrain positioning.</p>
+<div class="actions"><button class="secondary" id="moveUp">Move up</button><button class="secondary" id="moveDown">Move down</button></div>
+<label for="spaceAbove">Space above (px)</label><input type="number" id="spaceAbove" min="0" max="200" step="4" placeholder="Page default">
+<label for="spaceBelow">Space below (px)</label><input type="number" id="spaceBelow" min="0" max="200" step="4" placeholder="Page default">
+<button class="secondary" id="resetFormatting">Reset custom formatting</button></div><hr>
 <h2>4. Publish changes</h2>
 <p class="note">Save creates a GitHub commit. Changes typically appear after GitHub Pages deploys. The existing <code>noindex</code> setting is preserved.</p>
 <div class="actions"><button id="save" disabled>Save changes to GitHub</button><button id="reset" class="secondary" disabled>Discard edits</button></div>
@@ -97,7 +109,7 @@ async function github(path,method="GET",body=null){
  if(!response.ok)throw Error((json.message||"GitHub request failed")+" ("+response.status+")");
  return json;
 }
-function clearEdit(){active=null;$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value=""}
+function clearEdit(){active=null;$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value="";$("layoutEditor").classList.add("hidden")}
 function pageBase(){return new URL("../"+$("page").value.replace(/index\.html$/,""),location.href).href}
 function showPublicPreview(){const f=$("preview");f.removeAttribute("srcdoc");f.onload=null;f.src=pageBase()}
 function selectable(el){if(!el||el.closest("header,nav,footer,script,style,button,a"))return false;return !!el.closest("main")}
@@ -178,7 +190,44 @@ function choose(id){
  $("imageEditor").classList.toggle("hidden",el.tagName!=="IMG");
  if(el.tagName==="IMG"){$("imageAlt").value=el.alt||"";$("thumb").src=el.dataset.pendingUpload?(URL.createObjectURL(uploads.find(u=>u.path===el.dataset.pendingUpload).blob)):new URL(el.getAttribute("src")||"",pageBase()).href}
  else {$("textValue").value=el.textContent.trim();growTextBox()}
+ updateLayoutControls();
  const d=$("preview").contentDocument;if(d){d.querySelectorAll(".editor-picked").forEach(n=>n.classList.remove("editor-picked"));let selected=d.querySelector('[data-editor-id="'+id+'"]');if(selected)selected.classList.add("editor-picked")}
+}
+
+function numberStyle(el,prop){const v=parseFloat(el.style[prop]);return Number.isFinite(v)?v:""}
+function updateLayoutControls(){
+ if(!active)return;
+ $("layoutEditor").classList.remove("hidden");
+ $("spaceAbove").value=numberStyle(active,"marginTop");
+ $("spaceBelow").value=numberStyle(active,"marginBottom");
+ if(active.tagName==="IMG"){
+  $("imageWidth").value=Math.max(20,Math.min(100,parseFloat(active.style.width)||100));
+  $("imageWidthLabel").textContent=$("imageWidth").value+"%";
+  $("imageFit").value=active.style.objectFit==="cover"?"cover":"contain";
+ }else{
+  $("elementType").value=/^H[1-4]$/.test(active.tagName)?active.tagName:"P";
+  $("fontSize").value=numberStyle(active,"fontSize");
+  $("textWidth").value=Math.max(35,Math.min(100,parseFloat(active.style.maxWidth)||100));
+  $("textWidthLabel").textContent=$("textWidth").value+"%";
+ }
+}
+function applyStyle(property,value){
+ if(!active)return;active.style[property]=value;dirty=true;enableSave();refreshSelection();
+ message("Layout updated in preview. Save to GitHub to publish.","ok");
+}
+function moveSelected(direction){
+ if(!active||!active.parentElement)return;
+ const parent=active.parentElement,siblings=[...parent.children],i=siblings.indexOf(active),other=siblings[i+direction];
+ if(!other)return message("Cannot move further within this section.");
+ if(direction<0)parent.insertBefore(active,other);else parent.insertBefore(other,active);
+ dirty=true;enableSave();refreshSelection();message("Block moved. Check the layout before publishing.","ok");
+}
+function horizontalAlign(value){
+ if(!active)return;
+ if(active.tagName==="IMG"){
+  active.style.display="block";active.style.marginLeft=value==="left"?"0":"auto";active.style.marginRight=value==="right"?"0":"auto";
+ }else active.style.textAlign=value;
+ dirty=true;enableSave();refreshSelection();
 }
 function refreshSelection(){let id=editableList(pageDoc).indexOf(active);draw();if(id>=0)setTimeout(()=>choose(id),100)}
 async function load(){
@@ -205,6 +254,40 @@ $("textValue").addEventListener("input",()=>{
 });
 $("applyAlt").onclick=()=>{if(!active||active.tagName!=="IMG")return;active.alt=$("imageAlt").value;dirty=true;enableSave();message("SEO image description updated. Save to publish.","ok")};
 $("imageAlt").addEventListener("input",()=>{if(active&&active.tagName==="IMG"){active.alt=$("imageAlt").value;dirty=true;enableSave()}});
+
+$("elementType").onchange=()=>{
+ if(!active||active.tagName==="IMG")return;
+ const tag=$("elementType").value;
+ if(active.tagName===tag)return;
+ const replacement=pageDoc.createElement(tag);replacement.innerHTML=active.innerHTML;
+ for(const attr of active.attributes)replacement.setAttribute(attr.name,attr.value);
+ active.replaceWith(replacement);active=replacement;dirty=true;enableSave();refreshSelection();
+};
+$("fontSize").onchange=()=>applyStyle("fontSize",$("fontSize").value?$("fontSize").value+"px":"");
+$("textWidth").oninput=()=>{$("textWidthLabel").textContent=$("textWidth").value+"%"};
+$("textWidth").onchange=()=>applyStyle("maxWidth",$("textWidth").value==="100"?"":$("textWidth").value+"%");
+$("alignLeft").onclick=()=>horizontalAlign("left");
+$("alignCenter").onclick=()=>horizontalAlign("center");
+$("alignRight").onclick=()=>horizontalAlign("right");
+$("imageLeft").onclick=()=>horizontalAlign("left");
+$("imageCenter").onclick=()=>horizontalAlign("center");
+$("imageRight").onclick=()=>horizontalAlign("right");
+$("imageWidth").oninput=()=>{$("imageWidthLabel").textContent=$("imageWidth").value+"%"};
+$("imageWidth").onchange=()=>{
+ if(!active||active.tagName!=="IMG")return;
+ active.style.width=$("imageWidth").value+"%";active.style.height="auto";active.style.maxWidth="100%";
+ dirty=true;enableSave();refreshSelection();
+};
+$("imageFit").onchange=()=>applyStyle("objectFit",$("imageFit").value);
+$("spaceAbove").onchange=()=>applyStyle("marginTop",$("spaceAbove").value?$("spaceAbove").value+"px":"");
+$("spaceBelow").onchange=()=>applyStyle("marginBottom",$("spaceBelow").value?$("spaceBelow").value+"px":"");
+$("moveUp").onclick=()=>moveSelected(-1);
+$("moveDown").onclick=()=>moveSelected(1);
+$("resetFormatting").onclick=()=>{
+ if(!active)return;
+ for(const prop of ["fontSize","maxWidth","textAlign","width","height","objectFit","marginTop","marginBottom","marginLeft","marginRight","display"])active.style[prop]="";
+ dirty=true;enableSave();refreshSelection();
+};
 $("imageFile").onchange=async e=>{
  const file=e.target.files[0];if(!file||!active||active.tagName!=="IMG")return;
  if(file.size>25*1024*1024){message("Please choose an image smaller than 25MB.","error");return}

@@ -7,501 +7,681 @@
 <title>Website Editor | Gunpowder Studios</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#241e17;background:#efe8db}
-*{box-sizing:border-box}body{margin:0}.header{background:#181410;color:#fff2dc;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.header h1{font-size:1.1rem;margin:0}.header a{color:#fff2dc;text-decoration:none;font-weight:700}
-.frame{display:grid;grid-template-columns:minmax(280px,350px) 1fr;min-height:calc(100vh - 62px)}
-aside{background:#fffaf1;border-right:1px solid #d7cbb8;padding:20px;overflow:auto}
-main{padding:12px;min-width:0}.preview{background:white;border:1px solid #d7cbb8;border-radius:12px;overflow:hidden;height:calc(100vh - 94px)}
-iframe{width:100%;height:100%;border:0;background:white}h2{font-size:1.05rem;margin:0 0 12px}p{font-size:.88rem;line-height:1.5}label{display:block;margin:12px 0 5px;font-size:.82rem;font-weight:800}
-input,textarea,select,button{font:inherit}input:not([type=file]),textarea,select{width:100%;border:1px solid #cbbca7;border-radius:8px;background:#fff;padding:10px}
-textarea{min-height:90px;resize:none;overflow:hidden;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-button{border:0;border-radius:9px;padding:11px 14px;background:#a62b22;color:white;font-weight:800;cursor:pointer}
-button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cursor:not-allowed}
-.note{font-size:.78rem;color:#66594b}.status{padding:10px;margin:12px 0;border-radius:8px;background:#ede7db;font-size:.82rem;white-space:pre-wrap;overflow-wrap:anywhere}
-.status.ok{background:#e0efdf;color:#245629}.status.error{background:#fae0d9;color:#812c22}
-.hidden{display:none!important}hr{border:0;border-top:1px solid #e2d6c4;margin:20px 0}
-.thumb{max-width:100%;max-height:150px;object-fit:contain;background:#f2eee8;border-radius:8px}input[type=range]{width:100%;accent-color:#a62b22}
-.topnote{background:#fff2d0;padding:10px;border-radius:8px}
-@media(max-width:770px){.frame{display:block}aside{max-height:none}.preview{height:70vh}}
+*{box-sizing:border-box}
+body{margin:0;display:flex;flex-direction:column;height:100vh;height:100dvh}
+[hidden]{display:none!important}
+input,textarea,select,button{font:inherit}
+button{border:0;border-radius:9px;padding:8px 12px;font-size:.8rem;background:#a62b22;color:#fff;font-weight:800;cursor:pointer}
+button.secondary{background:#eee5d5;color:#2c2317}
+button:disabled{opacity:.4;cursor:not-allowed}
+button[aria-pressed=true]{background:#f89317;color:#231a15}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #f89317;outline-offset:2px}
+input[type=text],input[type=password],textarea,select{border:1px solid #cbbca7;border-radius:8px;background:#fff;padding:8px;color:#231a15}
 
-/* Full-width visual editor with compact top controls and floating selection tools */
-.frame{display:block;min-height:0}
-.frame aside{display:none}
-.frame main{position:relative;padding:0}
-.frame .preview{height:calc(100vh - 116px);border-radius:0;border:0}
-.header{flex-wrap:wrap;padding:10px 16px;gap:10px}
-.header h1{font-size:1rem}
+/* Top controls */
+.header{background:#181410;color:#fff2dc;padding:10px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.header h1{font-size:1rem;margin:0}
+.header a{color:#fff2dc;text-decoration:none;font-weight:700;font-size:.85rem}
 .top-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.top-controls select{width:auto;min-width:165px;padding:8px}
-.top-controls button{padding:8px 12px;font-size:.8rem}
-.top-controls button:disabled{opacity:.4}
-#loginPanel{display:none;flex-wrap:wrap;align-items:center;gap:8px;background:#fff8e6;padding:10px 15px;color:#2b241b;border-bottom:1px solid #dbceb2}
-#loginPanel.open{display:flex}
-#loginPanel input[type=password]{width:min(340px,100%);padding:9px}
-#loginPanel label{margin:0;font-size:.78rem}
-#loginPanel button{padding:9px}
-#loginPanel .note{flex-basis:100%;margin:3px 0}
-#editorNotice{font-size:.78rem;color:#635b4e;background:#fffaf1;padding:7px 16px;min-height:30px}
+.top-controls select{min-width:165px}
+.panel{display:none;flex-wrap:wrap;align-items:center;gap:8px;background:#fff8e6;padding:10px 15px;color:#2b241b;border-bottom:1px solid #dbceb2}
+.panel.open{display:flex}
+.panel label{font-size:.78rem;font-weight:800}
+.panel .note{flex-basis:100%;margin:3px 0;font-size:.78rem;color:#66594b;line-height:1.5}
+#headerToken{width:min(340px,100%)}
+#seoPanel .field{display:flex;flex-direction:column;gap:4px;flex:1 1 320px}
+#seoPanel textarea{resize:vertical;min-height:58px}
+.count{font-size:.74rem;color:#66594b}.count.warn{color:#9a4b0a;font-weight:700}
+#editorNotice{font-size:.78rem;color:#635b4e;background:#fffaf1;padding:7px 16px;min-height:30px;white-space:pre-wrap;overflow-wrap:anywhere}
 #editorNotice.success{color:#24682d}
-#editorNotice.error{color:#a12b20}
-#floatingTools{position:absolute;z-index:100;display:none;align-items:center;flex-wrap:wrap;max-width:min(760px,calc(100vw - 18px));gap:4px;background:#211b16;color:#fff5de;padding:7px 9px;border-radius:11px;box-shadow:0 12px 36px #0005;border:1px solid #6b5744}
+#editorNotice.error{color:#a12b20;font-weight:700}
+
+/* Preview */
+main{position:relative;flex:1;min-height:0;overflow:hidden}
+.preview{height:100%;background:#fff}
+.preview.mobile{background:#2c261f;padding:10px 0}
+iframe{width:100%;height:100%;border:0;background:#fff;display:block}
+.preview.mobile iframe{width:390px;max-width:100%;margin:0 auto;border-radius:18px}
+
+/* Floating selection tools */
+#floatingTools{position:absolute;z-index:100;display:none;align-items:center;flex-wrap:wrap;max-width:min(760px,calc(100% - 16px));width:max-content;gap:4px;background:#211b16;color:#fff5de;padding:7px 9px;border-radius:11px;box-shadow:0 12px 36px #0005;border:1px solid #6b5744}
 #floatingTools.visible{display:flex}
-#floatingTools button,#floatingTools select,#floatingTools input{font:inherit;border-radius:6px;font-size:12px;min-height:32px}
-#floatingTools button{background:#42362b;color:#fff5e6;padding:6px 9px;border:1px solid #675446}
+#floatingTools button,#floatingTools select,#floatingTools input{border-radius:6px;font-size:12px;min-height:32px}
+#floatingTools button{background:#42362b;color:#fff5e6;padding:6px 9px;border:1px solid #675446;display:inline-flex;align-items:center;gap:4px}
 #floatingTools button:hover{background:#7e4b22}
 #floatingTools button.strong{background:#bf4b21}
-#floatingTools select,#floatingTools input{padding:4px 6px;background:#fffaf1;color:#231a15;border:0}
-#floatingTools input[type=number]{width:58px}
+#floatingTools select,#floatingTools input[type=text]{padding:4px 6px;background:#fffaf1;color:#231a15;border:0}
 #floatingTools input[type=range]{width:94px;accent-color:#f89317}
+#floatingTools svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 #floatingTools .sep{height:25px;width:1px;background:#715d4b;margin:0 3px}
 #floatingTools .tool-image,#floatingTools .tool-text{display:none;align-items:center;gap:4px;flex-wrap:wrap}
 #floatingTools.text-mode .tool-text,#floatingTools.image-mode .tool-image{display:flex}
 #floatingTools .tool-label{font-size:11px;color:#f2d0a7}
-@media(max-width:850px){.header{align-items:start}.top-controls{width:100%}.frame .preview{height:calc(100vh - 158px)}#floatingTools{gap:3px;padding:5px}#floatingTools button{padding:5px 7px}}
+#imageAlt{width:min(300px,60vw)}
+@media(max-width:850px){.top-controls{width:100%}#floatingTools{gap:3px;padding:5px}#floatingTools button{padding:5px 7px}}
 </style>
 </head>
 <body>
 <div class="header">
-<h1>Gunpowder Studios · Editor</h1>
-<div class="top-controls">
-<select id="headerPage" aria-label="Choose page"><option value="index.html">Homepage</option><option value="book-of-dungeon/index.html">Book of Dungeon</option><option value="kastles-card-game/index.html">Kastles</option><option value="bag-of-dungeon/index.html">Bag of Dungeon</option><option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option><option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option><option value="7-moons/index.html">7 Moons</option><option value="rabbito/index.html">Rabbito</option><option value="cheese/index.html">Who Stole My Cheese?</option><option value="coming-soon/index.html">Coming Soon</option><option value="about-us/index.html">About Us</option><option value="contact-us/index.html">Contact Us</option><option value="shop/index.html">Shop</option></select>
-<button id="headerConnect" class="secondary">Connect GitHub</button><button id="headerDisconnect" class="secondary" hidden>Disconnect</button><button id="headerDiscard" class="secondary" disabled>Discard</button><button id="headerSave" disabled>Save to GitHub</button>
-<a href="../">View website</a>
-</div></div>
-<div id="loginPanel">
-<label for="headerToken">GitHub access token</label><input id="headerToken" type="password" autocomplete="off" placeholder="github_pat_…">
-<label><input id="headerRemember" type="checkbox"> Remember token on this browser</label>
-<button id="headerLogin">Connect</button>
-<p class="note">A saved token is stored on this browser only, but browser storage is not encrypted against scripts running on the same GitHub Pages origin. Use a short-lived, fine-grained token restricted to this repository. Never use this on a shared computer. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create limited token</a>.</p>
+ <h1>Gunpowder Studios · Editor</h1>
+ <div class="top-controls">
+  <select id="headerPage" aria-label="Choose page">
+   <option value="index.html">Homepage</option>
+   <option value="book-of-dungeon/index.html">Book of Dungeon</option>
+   <option value="kastles-card-game/index.html">Kastles</option>
+   <option value="bag-of-dungeon/index.html">Bag of Dungeon</option>
+   <option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option>
+   <option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option>
+   <option value="7-moons/index.html">7 Moons</option>
+   <option value="rabbito/index.html">Rabbito</option>
+   <option value="cheese/index.html">Who Stole My Cheese?</option>
+   <option value="coming-soon/index.html">Coming Soon</option>
+   <option value="about-us/index.html">About Us</option>
+   <option value="contact-us/index.html">Contact Us</option>
+   <option value="shop/index.html">Shop</option>
+  </select>
+  <button id="viewToggle" class="secondary" aria-pressed="false" title="Preview at phone width">📱 Mobile</button>
+  <button id="seoButton" class="secondary" disabled title="Page title and search description">Page SEO</button>
+  <button id="undo" class="secondary" disabled title="Undo (Ctrl/⌘+Z)">↶ Undo</button>
+  <button id="redo" class="secondary" disabled title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
+  <button id="headerConnect" class="secondary">Connect GitHub</button>
+  <button id="headerDisconnect" class="secondary" hidden>Disconnect</button>
+  <button id="headerDiscard" class="secondary" disabled>Discard</button>
+  <button id="headerSave" disabled title="Save (Ctrl/⌘+S)">Save to GitHub</button>
+  <a href="../" target="_blank" rel="noopener">View website ↗</a>
+ </div>
 </div>
-<div id="editorNotice" role="status" aria-live="polite">Select a page to preview. Connect GitHub to edit text or pictures.</div>
-<div class="frame">
-<aside>
-<h2>1. Connect to GitHub</h2>
-<p class="note">Use a <strong>fine-grained personal access token</strong> for <code>gunpowderstudios/website</code>, with <strong>Contents: Read and write</strong>. The token stays in this browser tab's memory and is never saved in the website or sent anywhere except GitHub.</p>
-<label for="token">GitHub access token</label>
-<input id="token" type="password" autocomplete="off" placeholder="github_pat_...">
-<div class="actions"><button id="connect">Connect</button><button class="secondary" id="disconnect">Disconnect</button></div>
-<p class="note"><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a limited GitHub token</a> (choose only the website repository, Contents read/write, and a short expiry). Anyone may open this editor page, but only someone with repository write access can publish.</p>
-<hr>
-<h2>2. Choose a page</h2>
-<label for="page">Page</label>
-<select id="page">
-<option value="index.html">Homepage</option>
-<option value="book-of-dungeon/index.html">Book of Dungeon</option>
-<option value="kastles-card-game/index.html">Kastles</option>
-<option value="bag-of-dungeon/index.html">Bag of Dungeon</option>
-<option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option>
-<option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option>
-<option value="7-moons/index.html">7 Moons</option>
-<option value="rabbito/index.html">Rabbito</option>
-<option value="cheese/index.html">Who Stole My Cheese?</option>
-<option value="coming-soon/index.html">Coming Soon</option>
-<option value="about-us/index.html">About Us</option>
-<option value="contact-us/index.html">Contact Us</option>
-<option value="shop/index.html">Shop</option>
-</select>
-<div class="actions"><button id="load" class="secondary">Load page</button></div>
-<hr>
-<h2>3. Click text or an image in the preview</h2>
-<p class="note">Double-click text on the page to edit directly, with the text box growing automatically. Click outside to finish. Single-click to edit in the left panel, or select an image to replace it. Navigation links are not editable.</p>
-<div id="noSelection" class="topnote note">Choose a page to preview it. Connect to GitHub to make edits.</div>
-<div id="textEditor" class="hidden">
-<label for="textValue">Selected text</label>
-<textarea id="textValue"></textarea>
-<p class="note">For paragraphs containing bold or inline styling, replacing the text removes that paragraph's inline formatting.</p>
-<label for="elementType">Text style</label><select id="elementType"><option value="P">Paragraph</option><option value="H1">Heading 1 (H1)</option><option value="H2">Heading 2 (H2)</option><option value="H3">Heading 3 (H3)</option><option value="H4">Heading 4 (H4)</option></select>
-<label for="fontSize">Text size (px, optional)</label><input id="fontSize" type="number" min="10" max="120" placeholder="Page default">
-<div class="actions"><button class="secondary" id="alignLeft">Align left</button><button class="secondary" id="alignCenter">Centre</button><button class="secondary" id="alignRight">Align right</button></div>
-<label for="textWidth">Text box maximum width (%)</label><input id="textWidth" type="range" min="35" max="100" value="100"><span id="textWidthLabel" class="note">100%</span>
-<button id="applyText" class="secondary">Update preview</button>
+
+<div id="loginPanel" class="panel">
+ <label for="headerToken">GitHub access token</label>
+ <input id="headerToken" type="password" autocomplete="off" placeholder="github_pat_…">
+ <label><input id="headerRemember" type="checkbox"> Remember token on this browser</label>
+ <button id="headerLogin">Connect</button>
+ <p class="note">Use a short-lived, fine-grained token limited to the <strong>website</strong> repository with <strong>Contents: Read and write</strong>. A remembered token is stored unencrypted in this browser, where other pages on the same web address could read it. Never use this on a shared computer. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create limited token</a>.</p>
 </div>
-<div id="imageEditor" class="hidden">
-<img id="thumb" class="thumb" alt="Selected preview image">
-<label for="imageAlt">Image description (SEO alt text)</label>
-<input id="imageAlt" type="text" placeholder="Describe what is shown">
-<label for="imageFile">Replace image</label>
-<input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif">
-<p class="note">Photos and artwork are converted to WebP, up to 2,000px wide, and named with the page name for SEO. Animated GIFs become a still image.</p>
-<label for="imageWidth">Image width (%)</label><input type="range" id="imageWidth" min="20" max="100" value="100"><span id="imageWidthLabel" class="note">100%</span>
-<div class="actions"><button class="secondary" id="imageLeft">Align left</button><button class="secondary" id="imageCenter">Centre</button><button class="secondary" id="imageRight">Align right</button></div>
-<label for="imageFit">Image fit</label><select id="imageFit"><option value="contain">Show full image</option><option value="cover">Fill image frame</option></select>
-<button id="applyAlt" class="secondary">Update image description</button>
+
+<div id="seoPanel" class="panel">
+ <div class="field"><label for="seoTitle">Page title (shown in Google results)</label><input id="seoTitle" type="text"><span id="titleCount" class="count"></span></div>
+ <div class="field"><label for="seoDescription">Meta description</label><textarea id="seoDescription"></textarea><span id="descriptionCount" class="count"></span></div>
+ <p class="note" id="seoSummary"></p>
 </div>
-<div id="layoutEditor" class="hidden"><hr><h2>Position and spacing</h2>
-<p class="note">Move a block within its existing section. Some page layouts constrain positioning.</p>
-<div class="actions"><button class="secondary" id="moveUp">Move up</button><button class="secondary" id="moveDown">Move down</button></div>
-<label for="spaceAbove">Space above (px)</label><input type="number" id="spaceAbove" min="0" max="200" step="4" placeholder="Page default">
-<label for="spaceBelow">Space below (px)</label><input type="number" id="spaceBelow" min="0" max="200" step="4" placeholder="Page default">
-<button class="secondary" id="resetFormatting">Reset custom formatting</button></div><hr>
-<h2>4. Publish changes</h2>
-<p class="note">Save creates a GitHub commit. Changes typically appear after GitHub Pages deploys. The existing <code>noindex</code> setting is preserved.</p>
-<div class="actions"><button id="save" disabled>Save changes to GitHub</button><button id="reset" class="secondary" disabled>Discard edits</button></div>
-<div id="status" class="status">Not connected.</div>
-</aside>
-<main><div class="preview"><iframe id="preview" title="Website page preview" sandbox="allow-same-origin"></iframe></div>
-<div id="floatingTools" role="toolbar" aria-label="Edit selected page element">
-<div class="tool-text">
-<select id="floatHeading" title="Text style"><option value="P">Paragraph</option><option value="H1">H1</option><option value="H2">H2</option><option value="H3">H3</option><option value="H4">H4</option></select>
-<button data-float="smaller" title="Reduce text size">A−</button><button data-float="bigger" title="Enlarge text">A+</button>
-<div class="sep"></div>
-<button data-float="left" title="Align left">☰</button><button data-float="center" title="Centre text">≡</button><button data-float="right" title="Align right">☷</button>
-<button data-float="narrow" title="Narrow text box">⇥−</button><button data-float="wide" title="Widen text box">⇥+</button>
-</div>
-<div class="tool-image">
-<button data-float="upload" title="Replace picture">📷 Replace</button>
-<span class="tool-label">Width</span><input id="floatImageWidth" type="range" min="20" max="100" value="100" title="Image width percentage">
-<button data-float="left" title="Align image left">◧</button><button data-float="center" title="Centre image">▣</button><button data-float="right" title="Align image right">◨</button>
-</div>
-<div class="sep"></div>
-<button data-float="up" title="Move block up">↑</button><button data-float="down" title="Move block down">↓</button>
-<button data-float="spaceLess" title="Less space below">↕−</button><button data-float="spaceMore" title="More space below">↕+</button>
-<button data-float="reset" title="Clear custom formatting">↺</button>
-<button id="floatDone" class="strong" title="Finish editing">✓ Done</button>
-</div></main>
-</div>
+
+<div id="editorNotice" role="status" aria-live="polite"></div>
+
+<main>
+ <div class="preview" id="previewShell"><iframe id="preview" title="Website page preview" sandbox="allow-same-origin"></iframe></div>
+ <div id="floatingTools" role="toolbar" aria-label="Edit selected page element">
+  <div class="tool-text">
+   <select id="floatHeading" aria-label="Text style" title="Text style"><option value="P">Paragraph</option><option value="H1">H1</option><option value="H2">H2</option><option value="H3">H3</option><option value="H4">H4</option></select>
+   <button data-float="edit" title="Edit the words (or double-click the text)">✎ Edit text</button>
+   <button data-float="smaller" title="Smaller text">A−</button><button data-float="bigger" title="Bigger text">A+</button>
+   <button data-float="narrow" title="Narrower text box">Width −</button><button data-float="wide" title="Wider text box">Width +</button>
+  </div>
+  <div class="tool-image">
+   <button data-float="upload" title="Replace picture">📷 Replace</button>
+   <span class="tool-label">Width</span><input id="floatImageWidth" type="range" min="20" max="100" value="100" aria-label="Image width percentage">
+   <button data-float="fit" title="Switch between showing the full picture and filling the frame">Fit / Fill</button>
+   <span class="tool-label">Description</span><input id="imageAlt" type="text" aria-label="Image description (alt text)" placeholder="Describe what the picture shows">
+  </div>
+  <div class="sep"></div>
+  <button data-float="left" title="Align left" aria-label="Align left"><svg viewBox="0 0 16 16"><path d="M2 3h12M2 8h7M2 13h10"/></svg></button>
+  <button data-float="center" title="Centre" aria-label="Centre"><svg viewBox="0 0 16 16"><path d="M2 3h12M4.5 8h7M3 13h10"/></svg></button>
+  <button data-float="right" title="Align right" aria-label="Align right"><svg viewBox="0 0 16 16"><path d="M2 3h12M7 8h7M4 13h10"/></svg></button>
+  <div class="sep"></div>
+  <button data-float="up" title="Move block up" aria-label="Move block up">↑</button><button data-float="down" title="Move block down" aria-label="Move block down">↓</button>
+  <button data-float="spaceLess" title="Less space below">Space −</button><button data-float="spaceMore" title="More space below">Space +</button>
+  <button data-float="reset" title="Clear custom formatting" aria-label="Clear custom formatting">↺</button>
+  <button id="floatDone" class="strong" title="Finish editing">✓ Done</button>
+ </div>
+</main>
+<input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif" hidden>
+
 <script>
 "use strict";
 const OWNER="gunpowderstudios",REPO="website",BRANCH="main";
+const TOKEN_KEY="gunpowder-website-editor-token-v1";
+const EDITABLE=":is(h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,dt,dd,address,img,.eyebrow,.tick,.upcoming-release,.kicker,.fact>strong,.fact>span,.play-card>strong)";
+const SHOP_LINK=/amazon\.|amzn\.|etsy\.com/i;
+const IMAGE_LINK=/\.(png|jpe?g|webp|gif|avif)$/i;
+const STYLE_PROPS=["fontSize","maxWidth","textAlign","width","height","objectFit","marginTop","marginBottom","marginLeft","marginRight","display"];
 const $=id=>document.getElementById(id);
-let token="",pageDoc=null,originalSha="",active=null,dirty=false,uploads=[],renderedURL=[];
-const opts={headers:()=>({"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"})};
-const api=p=>"https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+p;
-function message(t,type=""){$("status").textContent=t;$("status").className="status "+type;$("editorNotice").textContent=t;$("editorNotice").className=type||""}
-function enableSave(){const can=!!(token&&pageDoc&&dirty);$("save").disabled=!can;$("reset").disabled=!pageDoc;$("headerSave").disabled=!can;$("headerDiscard").disabled=!pageDoc;$("headerConnect").textContent=token?"Connected ✓":"Connect GitHub";$("headerDisconnect").hidden=!token}
-function toBase64(buffer){let bytes=new Uint8Array(buffer),s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)}
+const frame=$("preview");
+
+let token="";
+let pageDoc=null;          // the page being edited (this is what gets saved)
+let loaded=null;           // {path, sha, savedHTML, guard}
+let items=[],views=[];     // matching editable elements in pageDoc and in the preview
+let selected=-1;
+let editing=null;          // {id, last} while text is being typed
+let uploads=[];            // {path, blob, url, uploaded}
+let undoStack=[],redoStack=[],lastCheckpoint="";
+let busy=false,slide=0;
+
+/* ---------- GitHub ---------- */
 async function github(path,method="GET",body=null){
- const response=await fetch(api(path),{method,headers:{...opts.headers(),...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined,cache:"no-store"});
+ const url="https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+path+(method==="GET"?"?ref="+BRANCH:"");
+ const response=await fetch(url,{method,cache:"no-store",body:body?JSON.stringify(body):undefined,
+  headers:{"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})}});
  let json={};try{json=await response.json()}catch{}
- if(!response.ok)throw Error((json.message||"GitHub request failed")+" ("+response.status+")");
+ if(!response.ok){const error=Error((json.message||"GitHub request failed")+" ("+response.status+")");error.status=response.status;throw error}
  return json;
 }
-function clearEdit(){active=null;$("floatingTools").classList.remove("visible","text-mode","image-mode");$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value="";$("layoutEditor").classList.add("hidden")}
-function pageBase(){return new URL("../"+$("page").value.replace(/index\.html$/,""),location.href).href}
-function showPublicPreview(){const f=$("preview");f.removeAttribute("srcdoc");f.onload=null;f.src=pageBase()}
-function selectable(el){if(!el||el.closest("header,nav,footer,script,style,button,a"))return false;return !!el.closest("main")}
-function editableList(doc){return [...doc.querySelectorAll("main h1,main h2,main h3,main h4,main p,main figcaption,main img")].filter(el=>el.tagName==="IMG"||!el.querySelector("img,a,button"))}
-function growTextBox(){
- const t=$("textValue");t.style.height="auto";t.style.height=Math.max(90,t.scrollHeight+4)+"px";
+function explain(error){
+ if(error.status===401)return "GitHub rejected the token (it may have expired). Click Connect GitHub and paste a new one. Your unsaved edits stay on screen.";
+ if(error.status===403)return "GitHub refused this: "+error.message+". Check the token has Contents: Read and write for the website repository.";
+ if(error.status===409)return "This page has changed on GitHub since you opened it, so nothing was overwritten. Copy any new wording you need, press Discard to load the latest version, then make the change again.";
+ return error.message;
 }
-function updateInlineText(el){
- const source=editableList(pageDoc)[Number(el.dataset.editorId)];
- if(!source||source.tagName==="IMG")return;
- const value=el.innerText.replace(/\r/g,"").replace(/\n+$/,"");
- source.textContent=value;
- if(value.includes("\n"))source.style.whiteSpace="pre-wrap";
- if(active===source){$("textValue").value=value;growTextBox()}
- dirty=true;enableSave();
- message("Text changed. Click Save changes to GitHub when finished.","ok");
+function toBase64(buffer){const bytes=new Uint8Array(buffer);let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)}
+function fromBase64(text){return new TextDecoder().decode(Uint8Array.from(atob(text.replace(/\s/g,"")),c=>c.charCodeAt(0)))}
+
+/* ---------- Page state ---------- */
+const parse=html=>new DOMParser().parseFromString(html,"text/html");
+// Keeps the end of the file stable, so repeated saves do not add blank lines.
+const serialize=doc=>"<!doctype html>\n"+doc.documentElement.outerHTML.replace(/\s*<\/body><\/html>$/,"\n</body></html>")+"\n";
+function editableList(doc){
+ return [...doc.querySelectorAll("main "+EDITABLE)].filter(el=>el.tagName==="IMG"||
+  (!el.querySelector("img,button,video,input,div,p,ul,ol")&&![...el.querySelectorAll("a[href]")].some(a=>SHOP_LINK.test(a.getAttribute("href")))&&!el.parentElement.closest(EDITABLE)));
 }
-function endInlineEdit(el){
- if(!el||!el.isContentEditable)return;
- updateInlineText(el);
- el.removeAttribute("contenteditable");
- el.removeAttribute("spellcheck");
- el.classList.remove("editor-inline");
+// Things the editor must never change: shopping buttons, scripts and search-engine settings.
+function protectedParts(doc){
+ return JSON.stringify([
+  [...doc.querySelectorAll('meta[name="robots"],link[rel="canonical"]')].map(e=>e.outerHTML),
+  [...doc.querySelectorAll("a[href]")].filter(a=>SHOP_LINK.test(a.getAttribute("href"))).map(a=>[a.getAttribute("href"),a.className,a.textContent,a.target,a.rel]),
+  [...doc.querySelectorAll("script")].map(s=>s.outerHTML)
+ ]);
 }
-function bindPreview(){
- const d=$("preview").contentDocument;if(!d)return;
- const st=d.createElement("style");
- st.textContent="[data-editor-id]{cursor:pointer!important}[data-editor-id]:hover{outline:3px dashed #f89317!important;outline-offset:3px}[data-editor-id].editor-picked{outline:4px solid #ff8125!important;outline-offset:3px}[data-editor-id].editor-inline{outline:3px solid #f89317!important;outline-offset:4px;white-space:pre-wrap;min-height:1.2em;cursor:text!important}";
- d.head.append(st);
- d.addEventListener("click",e=>{
+const isDirty=()=>!!(loaded&&pageDoc&&serialize(pageDoc)!==loaded.savedHTML);
+function message(text,type=""){$("editorNotice").textContent=text;$("editorNotice").className=type==="ok"?"success":type}
+function refresh(){
+ const dirty=isDirty();
+ $("headerSave").disabled=busy||!token||!dirty;
+ $("headerDiscard").disabled=busy||!dirty;
+ $("undo").disabled=busy||!undoStack.length;
+ $("redo").disabled=busy||!redoStack.length;
+ $("seoButton").disabled=!pageDoc;
+ $("headerPage").disabled=busy;
+ $("headerDisconnect").disabled=busy;
+ $("headerDisconnect").hidden=!token;
+ $("headerConnect").textContent=token?"Connected ✓":savedToken()?"Connect saved token":"Connect GitHub";
+}
+
+/* ---------- Undo / redo ---------- */
+function checkpoint(key=""){
+ if(key&&key===lastCheckpoint)return;
+ lastCheckpoint=key;
+ undoStack.push(pageDoc.documentElement.outerHTML);
+ if(undoStack.length>60)undoStack.shift();
+ redoStack=[];
+}
+function stepHistory(from,to){
+ if(busy||!pageDoc)return;
+ finishEditing();
+ if(!from.length)return;
+ to.push(pageDoc.documentElement.outerHTML);
+ pageDoc=parse("<!doctype html>"+from.pop());
+ lastCheckpoint="";clearSelection();render(true);fillSeo();refresh();
+}
+const undo=()=>stepHistory(undoStack,redoStack);
+const redo=()=>stepHistory(redoStack,undoStack);
+
+/* ---------- Preview ---------- */
+const siteRoot=()=>new URL("../",location.href);
+const pageBase=path=>new URL(path.replace(/index\.html$/,""),siteRoot()).href;
+function showPublicPreview(){frame.onload=null;frame.removeAttribute("srcdoc");frame.src=pageBase($("headerPage").value)}
+function uploadFor(src){
+ if(!src)return null;
+ const url=new URL(src,pageBase(loaded.path));
+ return uploads.find(u=>url.pathname===new URL(u.path,siteRoot()).pathname);
+}
+function render(keepScroll=false){
+ const scroll=keepScroll&&frame.contentWindow?frame.contentWindow.scrollY:0;
+ const copy=pageDoc.cloneNode(true);
+ const base=copy.createElement("base");base.href=pageBase(loaded.path);copy.head.prepend(base);
+ items=editableList(pageDoc);
+ editableList(copy).forEach((el,i)=>el.dataset.editorId=String(i));
+ // Pictures uploaded in this session are not on the live preview site yet.
+ copy.querySelectorAll("img").forEach(img=>{const u=uploadFor(img.getAttribute("src"));if(u){img.removeAttribute("onerror");img.setAttribute("src",u.url)}});
+ frame.onload=()=>{
+  const d=frame.contentDocument;if(!d||!d.querySelector("base"))return;
+  views=[];d.querySelectorAll("[data-editor-id]").forEach(el=>views[Number(el.dataset.editorId)]=el);
+  bindPreview(d);showSlide(d,slide);
+  if(scroll)frame.contentWindow.scrollTo({top:scroll,behavior:"instant"});
+  if(selected>=0)select(selected);
+ };
+ views=[];
+ frame.srcdoc=serialize(copy);
+}
+// Page scripts are switched off in the preview, so picture fallbacks and slides are handled here.
+function repairImage(img){
+ const tried=(img.dataset.editorTried||"").split("|");
+ const inline=/this\.src='([^']+)'/.exec(img.getAttribute("onerror")||"");
+ const next=[img.dataset.fallback,img.dataset.png,inline&&inline[1]].find(s=>s&&!tried.includes(s));
+ if(next){img.dataset.editorTried=tried.concat(next).join("|");img.src=next;return}
+ if(img.src.startsWith("data:"))return;
+ const name=(img.getAttribute("src")||"").split("/").pop().replace(/[<>&]/g,"");
+ img.src="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#3a3026"/><g fill="#f2d0a7" font-family="sans-serif" text-anchor="middle"><text x="300" y="190" font-size="28">No picture yet</text><text x="300" y="228" font-size="17">'+name+'</text></g></svg>');
+}
+function showSlide(d,index){
+ const track=d.querySelector(".hero-track");if(!track)return;
+ const count=track.children.length;slide=(index+count)%count;
+ track.style.transition="none";track.style.transform="translateX(-"+slide*100+"%)";
+ d.querySelectorAll(".hero-dot").forEach((dot,i)=>dot.classList.toggle("active",i===slide));
+}
+function bindPreview(d){
+ const style=d.createElement("style");
+ style.textContent="html{scroll-behavior:auto!important}"+
+  (token?"[data-editor-id]{cursor:pointer!important}[data-editor-id]:hover{outline:3px dashed #f89317!important;outline-offset:3px}":"")+
+  "[data-editor-id].editor-picked{outline:4px solid #ff8125!important;outline-offset:3px}"+
+  "[data-editor-id].editor-inline{outline:3px solid #f89317!important;outline-offset:4px;white-space:normal!important;min-height:1.2em;cursor:text!important}";
+ d.head.append(style);
+ d.querySelectorAll("img").forEach(img=>{
+  img.addEventListener("error",()=>repairImage(img));
+  if(img.complete&&!img.naturalWidth)repairImage(img);
+ });
+ const click=e=>{
+  const control=e.target.closest(".hero-prev,.hero-next,.hero-dot");
+  if(control){
+   e.preventDefault();finishEditing();clearSelection();
+   const dots=[...d.querySelectorAll(".hero-dot")];
+   showSlide(d,control.classList.contains("hero-dot")?dots.indexOf(control):slide+(control.classList.contains("hero-next")?1:-1));
+   return;
+  }
+  const link=e.target.closest("a[href]");
+  if(link)e.preventDefault();  // links must never navigate away from the page being edited
   const el=e.target.closest("[data-editor-id]");
-  if(!el||el.isContentEditable)return;
-  e.preventDefault();e.stopPropagation();choose(el.dataset.editorId);
- },true);
+  if(el){if(!el.isContentEditable){finishEditing();select(Number(el.dataset.editorId))}return}
+  finishEditing();clearSelection();
+  if(!link)return;
+  const href=link.getAttribute("href");
+  if(href.startsWith("#"))d.getElementById(href.slice(1))?.scrollIntoView();
+  else if(SHOP_LINK.test(href))message("Amazon and Etsy buttons are protected and cannot be changed here.");
+  else message("Links are switched off while editing. Use the page menu to change page.");
+ };
+ d.addEventListener("click",click,true);
+ d.addEventListener("auxclick",e=>{if(e.target.closest("a"))e.preventDefault()},true);
+ d.addEventListener("submit",e=>e.preventDefault(),true);
+ d.addEventListener("dragstart",e=>e.preventDefault(),true);
  d.addEventListener("dblclick",e=>{
-  if(!token||!pageDoc)return;
   const el=e.target.closest("[data-editor-id]");
-  if(!el||el.tagName==="IMG")return;
-  e.preventDefault();e.stopPropagation();
-  for(const other of d.querySelectorAll(".editor-inline"))if(other!==el)endInlineEdit(other);
-  choose(el.dataset.editorId);
-  if(el.isContentEditable)return;
-  el.setAttribute("contenteditable","plaintext-only");
-  el.setAttribute("spellcheck","true");
-  el.classList.add("editor-inline");
-  el.focus();
-  const selection=d.getSelection();
-  if(selection){const range=d.createRange();range.selectNodeContents(el);range.collapse(false);selection.removeAllRanges();selection.addRange(range)}
-  message("Edit in the page. Click outside to finish, or press Ctrl+Enter.","ok");
+  if(el&&el.tagName!=="IMG"){e.preventDefault();startEditing(Number(el.dataset.editorId))}
  },true);
- d.addEventListener("input",e=>{
-  const el=e.target.closest(".editor-inline");
-  if(el&&el.isContentEditable)updateInlineText(el);
- },true);
- d.addEventListener("focusout",e=>{
-  const el=e.target.closest(".editor-inline");
-  if(el)endInlineEdit(el);
- },true);
- d.addEventListener("scroll",()=>{if(active)positionToolbar(selectedIndex())},{passive:true});
+ d.addEventListener("input",()=>commitText(),true);
+ d.addEventListener("focusout",e=>{if(editing&&e.target===views[editing.id])finishEditing()},true);
  d.addEventListener("keydown",e=>{
-  const el=e.target.closest(".editor-inline");
-  if(el&&(e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();el.blur()}
+  if(editing){
+   if(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))){e.preventDefault();finishEditing();return}
+   if(e.key==="Enter"){e.preventDefault();insertBreak(d);return}
+  }
+  shortcuts(e);
  },true);
-}
-function draw(){
- if(!pageDoc)return;
- renderedURL.forEach(u=>URL.revokeObjectURL(u));renderedURL=[];
- const cloned=pageDoc.cloneNode(true);
- let base=cloned.createElement("base");base.href=pageBase();cloned.head.prepend(base);
- const elements=editableList(cloned);
- elements.forEach((el,i)=>{el.dataset.editorId=String(i);if(el.tagName==="IMG"&&el.dataset.pendingUpload){let upload=uploads.find(u=>u.path===el.dataset.pendingUpload);if(upload){let blobURL=URL.createObjectURL(upload.blob);renderedURL.push(blobURL);el.removeAttribute("onerror");el.src=blobURL;}}});
- $("preview").srcdoc="<!doctype html>\n"+cloned.documentElement.outerHTML;
- $("preview").onload=()=>{bindPreview();if(active)showToolbar(selectedIndex())};
-}
-function choose(id){
- const els=editableList(pageDoc),el=els[Number(id)];if(!el)return;
- active=el;$("noSelection").classList.add("hidden");
- $("textEditor").classList.toggle("hidden",el.tagName==="IMG");
- $("imageEditor").classList.toggle("hidden",el.tagName!=="IMG");
- if(el.tagName==="IMG"){$("imageAlt").value=el.alt||"";$("thumb").src=el.dataset.pendingUpload?(URL.createObjectURL(uploads.find(u=>u.path===el.dataset.pendingUpload).blob)):new URL(el.getAttribute("src")||"",pageBase()).href}
- else {$("textValue").value=el.textContent.trim();growTextBox()}
- updateLayoutControls();
- showToolbar(id);
- const d=$("preview").contentDocument;if(d){d.querySelectorAll(".editor-picked").forEach(n=>n.classList.remove("editor-picked"));let selected=d.querySelector('[data-editor-id="'+id+'"]');if(selected)selected.classList.add("editor-picked")}
+ d.addEventListener("paste",e=>{
+  if(!editing)return;
+  e.preventDefault();
+  e.clipboardData.getData("text/plain").replace(/\r/g,"").split("\n").forEach((line,i)=>{
+   if(i)insertBreak(d);
+   if(line)d.execCommand("insertText",false,line);
+  });
+ },true);
+ d.addEventListener("scroll",positionToolbar,{passive:true});
 }
 
+/* ---------- Text editing (keeps bold, line breaks and other inline formatting) ---------- */
+function insertBreak(d){
+ const selection=d.getSelection();if(!selection.rangeCount)return;
+ const range=selection.getRangeAt(0),br=d.createElement("br");
+ range.deleteContents();range.insertNode(br);
+ if(!br.nextSibling||(br.nextSibling.nodeType===3&&!br.nextSibling.nextSibling&&!br.nextSibling.textContent))br.after(d.createElement("br")); // lets the cursor sit on the new line
+ range.setStartAfter(br);range.collapse(true);selection.removeAllRanges();selection.addRange(range);
+ commitText();
+}
+function startEditing(id){
+ if(!token||!views[id])return;
+ if(editing&&editing.id===id)return;
+ finishEditing();select(id);
+ const view=views[id],d=frame.contentDocument;
+ view.setAttribute("contenteditable","plaintext-only");
+ view.setAttribute("spellcheck","true");
+ view.classList.add("editor-inline");
+ editing={id,last:view.innerHTML};lastCheckpoint="";
+ view.focus();
+ const range=d.createRange();range.selectNodeContents(view);range.collapse(false);
+ const selection=d.getSelection();selection.removeAllRanges();selection.addRange(range);
+ message("Type directly on the page. Enter adds a new line; click outside or press Esc to finish.","ok");
+}
+function commitText(){
+ if(!editing)return;
+ const view=views[editing.id];if(!view||view.innerHTML===editing.last)return;
+ checkpoint("text-"+editing.id);
+ editing.last=view.innerHTML;
+ items[editing.id].innerHTML=view.innerHTML.replace(/(&nbsp;|\s|<br>)+$/,"");
+ refresh();positionToolbar();
+ message("Text changed. Save to GitHub when finished.","ok");
+}
+function finishEditing(){
+ if(!editing)return;
+ commitText();
+ const view=views[editing.id];editing=null;lastCheckpoint="";
+ if(view){view.removeAttribute("contenteditable");view.removeAttribute("spellcheck");view.classList.remove("editor-inline")}
+}
 
-function showToolbar(id){
- const bar=$("floatingTools");if(!active||!token){bar.classList.remove("visible");return}
- bar.classList.add("visible");bar.classList.toggle("image-mode",active.tagName==="IMG");bar.classList.toggle("text-mode",active.tagName!=="IMG");
- if(active.tagName==="IMG")$("floatImageWidth").value=Math.max(20,Math.min(100,parseFloat(active.style.width)||100));
- else $("floatHeading").value=/^H[1-4]$/.test(active.tagName)?active.tagName:"P";
- positionToolbar(id);
+/* ---------- Selection and floating tools ---------- */
+function clearSelection(){
+ views[selected]?.classList.remove("editor-picked");
+ selected=-1;lastCheckpoint="";
+ $("floatingTools").classList.remove("visible","text-mode","image-mode");
 }
-function positionToolbar(id){
- const bar=$("floatingTools"),f=$("preview"),main=f.closest("main"),d=f.contentDocument;
- if(!bar.classList.contains("visible")||!d)return;
- const el=d.querySelector('[data-editor-id="'+id+'"]');if(!el)return;
- const er=el.getBoundingClientRect(),fr=f.getBoundingClientRect(),mr=main.getBoundingClientRect();
- const left=fr.left-mr.left+er.left;
- const top=fr.top-mr.top+er.top;
- bar.style.left=Math.max(8,Math.min(left,main.clientWidth-bar.offsetWidth-8))+"px";
- bar.style.top=Math.max(8,top-bar.offsetHeight-9)+"px";
-}
-function selectedIndex(){return active?editableList(pageDoc).indexOf(active):-1}
-function numberStyle(el,prop){const v=parseFloat(el.style[prop]);return Number.isFinite(v)?v:""}
-function updateLayoutControls(){
- if(!active)return;
- $("layoutEditor").classList.remove("hidden");
- $("spaceAbove").value=numberStyle(active,"marginTop");
- $("spaceBelow").value=numberStyle(active,"marginBottom");
- if(active.tagName==="IMG"){
-  $("imageWidth").value=Math.max(20,Math.min(100,parseFloat(active.style.width)||100));
-  $("imageWidthLabel").textContent=$("imageWidth").value+"%";
-  $("imageFit").value=active.style.objectFit==="cover"?"cover":"contain";
+function select(id){
+ if(!token){message("Connect GitHub to edit this page.");return}
+ const el=items[id],view=views[id];if(!el||!view)return;
+ if(selected!==id){views[selected]?.classList.remove("editor-picked");lastCheckpoint=""}
+ selected=id;view.classList.add("editor-picked");
+ const bar=$("floatingTools"),isImage=el.tagName==="IMG";
+ bar.classList.add("visible");bar.classList.toggle("image-mode",isImage);bar.classList.toggle("text-mode",!isImage);
+ if(isImage){
+  $("floatImageWidth").value=Math.max(20,Math.min(100,parseFloat(el.style.width)||100));
+  $("imageAlt").value=el.getAttribute("alt")||"";
  }else{
-  $("elementType").value=/^H[1-4]$/.test(active.tagName)?active.tagName:"P";
-  $("fontSize").value=numberStyle(active,"fontSize");
-  $("textWidth").value=Math.max(35,Math.min(100,parseFloat(active.style.maxWidth)||100));
-  $("textWidthLabel").textContent=$("textWidth").value+"%";
+  $("floatHeading").hidden=!/^(H[1-4]|P)$/.test(el.tagName);
+  $("floatHeading").value=el.tagName;
  }
+ positionToolbar();
 }
-function applyStyle(property,value){
- if(!active)return;active.style[property]=value;dirty=true;enableSave();refreshSelection();
- message("Layout updated in preview. Save to GitHub to publish.","ok");
+function positionToolbar(){
+ const bar=$("floatingTools"),view=views[selected];
+ if(!view||!bar.classList.contains("visible"))return;
+ const main=frame.closest("main"),er=view.getBoundingClientRect(),fr=frame.getBoundingClientRect(),mr=main.getBoundingClientRect();
+ const top=fr.top-mr.top+er.top,bottom=fr.top-mr.top+er.bottom;
+ let y=top-bar.offsetHeight-9;                          // above the selection
+ if(y<8)y=bottom+9;                                     // otherwise below it
+ y=Math.max(8,Math.min(y,main.clientHeight-bar.offsetHeight-8));
+ bar.style.left=Math.max(8,Math.min(fr.left-mr.left+er.left,main.clientWidth-bar.offsetWidth-8))+"px";
+ bar.style.top=y+"px";
 }
-function moveSelected(direction){
- if(!active||!active.parentElement)return;
- const parent=active.parentElement,siblings=[...parent.children],i=siblings.indexOf(active),other=siblings[i+direction];
- if(!other)return message("Cannot move further within this section.");
- if(direction<0)parent.insertBefore(active,other);else parent.insertBefore(other,active);
- dirty=true;enableSave();refreshSelection();message("Block moved. Check the layout before publishing.","ok");
-}
-function horizontalAlign(value){
- if(!active)return;
- if(active.tagName==="IMG"){
-  active.style.display="block";active.style.marginLeft=value==="left"?"0":"auto";active.style.marginRight=value==="right"?"0":"auto";
- }else active.style.textAlign=value;
- dirty=true;enableSave();refreshSelection();
-}
-function refreshSelection(){let id=editableList(pageDoc).indexOf(active);draw();if(id>=0)setTimeout(()=>choose(id),100)}
-async function load(){
- if(!token){message("Connect using a GitHub token first.","error");return}
- if(dirty&&!confirm("Discard unsaved edits and load another page?"))return;
- try{message("Loading page from GitHub…");const path=$("page").value;const result=await github(path);originalSha=result.sha;
- const html=decodeURIComponent(Array.from(atob(result.content.replace(/\s/g,"")),x=>"%"+x.charCodeAt(0).toString(16).padStart(2,"0")).join(""));
- pageDoc=new DOMParser().parseFromString(html,"text/html");uploads=[];dirty=false;clearEdit();draw();enableSave();message("Page loaded. Click any heading, paragraph or picture to edit.","ok");
- }catch(e){message(e.message,"error")}
-}
-$("connect").onclick=async()=>{const v=$("token").value.trim();if(!v){message("Enter a GitHub token.","error");return}token=v;$("token").value="";try{await load();}catch(e){token="";message(e.message,"error")}};
-$("disconnect").onclick=()=>{token="";pageDoc=null;originalSha="";dirty=false;uploads=[];clearEdit();enableSave();showPublicPreview();message("Disconnected. Preview is available without a GitHub login.","ok")};
-$("load").onclick=()=>{if(token)load();else{showPublicPreview();message("Preview loaded. Connect to GitHub to edit.","ok")}};
-$("page").onchange=()=>{if(token){load()}else{clearEdit();showPublicPreview();message("Showing page preview. Connect to GitHub to edit.","ok")}};
-$("applyText").onclick=()=>{if(!active||active.tagName==="IMG")return;active.textContent=$("textValue").value;dirty=true;refreshSelection();enableSave();message("Text changed in preview. Click Save changes to publish.")};
-$("textValue").addEventListener("input",()=>{
- growTextBox();if(!active||active.tagName==="IMG")return;
- active.textContent=$("textValue").value;
- if(active.textContent.includes("\n"))active.style.whiteSpace="pre-wrap";
- dirty=true;enableSave();
- let idx=editableList(pageDoc).indexOf(active);
- const el=$("preview").contentDocument?.querySelector('[data-editor-id="'+idx+'"]');
- if(el&&!el.isContentEditable)el.textContent=$("textValue").value;
-});
-$("applyAlt").onclick=()=>{if(!active||active.tagName!=="IMG")return;active.alt=$("imageAlt").value;dirty=true;enableSave();message("SEO image description updated. Save to publish.","ok")};
-$("imageAlt").addEventListener("input",()=>{if(active&&active.tagName==="IMG"){active.alt=$("imageAlt").value;dirty=true;enableSave()}});
 
-$("elementType").onchange=()=>{
- if(!active||active.tagName==="IMG")return;
- const tag=$("elementType").value;
- if(active.tagName===tag)return;
- const replacement=pageDoc.createElement(tag);replacement.innerHTML=active.innerHTML;
- for(const attr of active.attributes)replacement.setAttribute(attr.name,attr.value);
- active.replaceWith(replacement);active=replacement;dirty=true;enableSave();refreshSelection();
-};
-$("fontSize").onchange=()=>applyStyle("fontSize",$("fontSize").value?$("fontSize").value+"px":"");
-$("textWidth").oninput=()=>{$("textWidthLabel").textContent=$("textWidth").value+"%"};
-$("textWidth").onchange=()=>applyStyle("maxWidth",$("textWidth").value==="100"?"":$("textWidth").value+"%");
-$("alignLeft").onclick=()=>horizontalAlign("left");
-$("alignCenter").onclick=()=>horizontalAlign("center");
-$("alignRight").onclick=()=>horizontalAlign("right");
-$("imageLeft").onclick=()=>horizontalAlign("left");
-$("imageCenter").onclick=()=>horizontalAlign("center");
-$("imageRight").onclick=()=>horizontalAlign("right");
-$("imageWidth").oninput=()=>{$("imageWidthLabel").textContent=$("imageWidth").value+"%"};
-$("imageWidth").onchange=()=>{
- if(!active||active.tagName!=="IMG")return;
- active.style.width=$("imageWidth").value+"%";active.style.height="auto";active.style.maxWidth="100%";
- dirty=true;enableSave();refreshSelection();
-};
-$("imageFit").onchange=()=>applyStyle("objectFit",$("imageFit").value);
-$("spaceAbove").onchange=()=>applyStyle("marginTop",$("spaceAbove").value?$("spaceAbove").value+"px":"");
-$("spaceBelow").onchange=()=>applyStyle("marginBottom",$("spaceBelow").value?$("spaceBelow").value+"px":"");
-$("moveUp").onclick=()=>moveSelected(-1);
-$("moveDown").onclick=()=>moveSelected(1);
-$("resetFormatting").onclick=()=>{
- if(!active)return;
- for(const prop of ["fontSize","maxWidth","textAlign","width","height","objectFit","marginTop","marginBottom","marginLeft","marginRight","display"])active.style[prop]="";
- dirty=true;enableSave();refreshSelection();
-};
-$("imageFile").onchange=async e=>{
- const file=e.target.files[0];if(!file||!active||active.tagName!=="IMG")return;
- if(file.size>25*1024*1024){message("Please choose an image smaller than 25MB.","error");return}
+/* ---------- Layout changes ---------- */
+function setStyles(styles,key=""){
+ if(selected<0)return;
+ checkpoint(key);
+ for(const el of [items[selected],views[selected]]){
+  Object.assign(el.style,styles);
+  if(!el.getAttribute("style"))el.removeAttribute("style");
+ }
+ refresh();positionToolbar();
+ message("Layout updated in the preview. Check Mobile view too, then save.","ok");
+}
+function align(side){
+ if(items[selected].tagName==="IMG")setStyles({display:"block",marginLeft:side==="left"?"0":"auto",marginRight:side==="right"?"0":"auto"});
+ else setStyles({textAlign:side});
+}
+function resizeText(step){
+ const inline=/([\d.]+)px\)?$/.exec(items[selected].style.fontSize);
+ const current=inline?Number(inline[1]):parseFloat(frame.contentWindow.getComputedStyle(views[selected]).fontSize);
+ const size=Math.max(10,Math.min(120,Math.round(current)+step));
+ // Large text still shrinks on phones.
+ setStyles({fontSize:size<=24?size+"px":"clamp("+Math.max(22,Math.round(size*.55))+"px, "+(size/11.8).toFixed(2)+"vw, "+size+"px)"});
+}
+function move(direction){
+ const sibling=el=>direction<0?el.previousElementSibling:el.nextElementSibling;
+ if(!sibling(items[selected]))return message("Cannot move further within this section.");
+ checkpoint();
+ for(const el of [items[selected],views[selected]]){
+  const other=sibling(el);
+  if(direction<0)other.before(el);else other.after(el);
+ }
+ // Picture and text numbering follows page order, so rebuild it.
+ const moved=items[selected];
+ selected=editableList(pageDoc).indexOf(moved);
+ render(true);refresh();message("Block moved. Check the layout before saving.","ok");
+}
+function changeTag(tag){
+ const old=items[selected];if(!old||old.tagName===tag)return;
+ checkpoint();
+ const swap=el=>{
+  const next=el.ownerDocument.createElement(tag);
+  for(const attr of el.attributes)next.setAttribute(attr.name,attr.value);
+  next.innerHTML=el.innerHTML;el.replaceWith(next);return next;
+ };
+ items[selected]=swap(old);
+ const view=views[selected]=swap(views[selected]);
+ // Elements created after binding are covered by the delegated preview events.
+ view.classList.add("editor-picked");
+ refresh();positionToolbar();message("Text style changed to "+(tag==="P"?"paragraph":tag)+".","ok");
+}
+
+/* ---------- Pictures ---------- */
+const slugify=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+async function pictureExists(path){
+ try{await github(path);return true}catch(e){if(e.status===404)return false;throw e}
+}
+async function encodeImage(file){
+ const bitmap=await createImageBitmap(file),scale=Math.min(1,2000/Math.max(bitmap.width,bitmap.height));
+ const canvas=document.createElement("canvas");
+ canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);
+ canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+ const encode=type=>new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error("Image conversion failed")),type,.88));
+ let blob=await encode("image/webp");
+ // Some browsers cannot create WebP and silently return PNG instead.
+ if(blob.type!=="image/webp"&&file.type==="image/jpeg")blob=await encode("image/jpeg");
+ return{blob,width:canvas.width,height:canvas.height,extension:{"image/webp":"webp","image/jpeg":"jpg"}[blob.type]||"png"};
+}
+async function replaceImage(file){
+ const id=selected,target=items[id],page=loaded;
+ if(!file||!target||target.tagName!=="IMG")return;
+ if(file.size>25*1024*1024)return message("Please choose an image smaller than 25MB.","error");
+ busy=true;refresh();
  try{
   message("Preparing optimised image…");
-  const bitmap=await createImageBitmap(file),scale=Math.min(1,2000/bitmap.width),canvas=document.createElement("canvas");
-  canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);
-  canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
-  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error("Image conversion failed")),"image/webp",.88));
-  const slug=$("page").value.split("/")[0].replace(/\.html$/,"home");
-  const filename=slug+"-"+file.name.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,45)+"-"+Date.now().toString(36)+".webp";
-  const path="images/uploads/"+filename;
-  uploads=uploads.filter(u=>u.path!==active.dataset.pendingUpload);
-  uploads.push({path,blob});
-  active.src=($("page").value==="index.html"?"":"../")+path;
-  active.dataset.pendingUpload=path;
-  active.removeAttribute("onerror");active.removeAttribute("data-fallback");active.removeAttribute("data-png");
-  const anchor=active.closest("a");if(anchor&&anchor.querySelectorAll("img").length===1)anchor.href=active.getAttribute("src");
-  if(!$("imageAlt").value.trim()){$("imageAlt").value=file.name.replace(/\.[^.]+$/,"").replace(/[-_]/g," ");active.alt=$("imageAlt").value}
-  dirty=true;enableSave();refreshSelection();
-  message("Image ready ("+Math.round(blob.size/1024)+" KB). Save changes to upload it and publish the page.","ok");
- }catch(err){message("Could not prepare image: "+err.message,"error")}
-};
-$("reset").onclick=()=>load();
-$("save").onclick=async()=>{
- if(!token||!pageDoc||!dirty)return;
- $("save").disabled=true;
- try{
-  for(let i=0;i<uploads.length;i++){
-   const u=uploads[i];message("Uploading image "+(i+1)+" of "+uploads.length+"…");
-   await github(u.path,"PUT",{message:"Add website image "+u.path.split("/").pop(),content:toBase64(await u.blob.arrayBuffer()),branch:BRANCH});
+  const image=await encodeImage(file);
+  const folder=page.path==="index.html"?"home":page.path.split("/").slice(-2)[0];
+  let name=slugify(file.name.replace(/\.[^.]+$/,"")).slice(0,60)||"image";
+  if(folder!=="home"&&!name.startsWith(folder))name=folder+"-"+name;
+  let path="images/uploads/"+name+"."+image.extension,n=1;
+  while(uploads.some(u=>u.path===path)||await pictureExists(path))path="images/uploads/"+name+"-"+(++n)+"."+image.extension;
+  if(loaded!==page||items[id]!==target)return;
+  const upload={path,blob:image.blob,url:URL.createObjectURL(image.blob),uploaded:false};
+  uploads.push(upload);
+  const src="../".repeat(page.path.split("/").length-1)+path;
+  checkpoint();
+  // A link that only enlarges this picture should follow it. Links to pages and shops are left alone.
+  const link=target.closest("a[href]");
+  if(link&&IMAGE_LINK.test(link.getAttribute("href"))&&link.querySelectorAll("img").length===1){
+   link.setAttribute("href",src);views[id].closest("a")?.setAttribute("href",src);
   }
-  const exportDoc=pageDoc.cloneNode(true);exportDoc.querySelectorAll("[data-pending-upload]").forEach(e=>e.removeAttribute("data-pending-upload"));
-  const cleaned="<!doctype html>\n"+exportDoc.documentElement.outerHTML+"\n";
-  const data=toBase64(new TextEncoder().encode(cleaned));
-  message("Publishing page to GitHub…");
-  const result=await github($("page").value,"PUT",{message:"Update "+$("page").value+" using website visual editor",content:data,sha:originalSha,branch:BRANCH});
-  originalSha=result.content.sha;uploads=[];dirty=false;pageDoc=exportDoc;enableSave();draw();
-  message("Saved to GitHub successfully! The updated page will appear after the Pages deployment completes.","ok");
- }catch(e){enableSave();message("Could not finish saving: "+e.message+"\nIf some images were uploaded, they are safely stored in GitHub; retry after checking the page.","error")}
-};
+  for(const el of [target,views[id]]){
+   for(const attr of ["onerror","data-fallback","data-png","data-editor-tried","srcset"])el.removeAttribute(attr);
+   if(el.hasAttribute("width"))el.setAttribute("width",image.width);
+   if(el.hasAttribute("height"))el.setAttribute("height",image.height);
+  }
+  target.setAttribute("src",src);views[id].setAttribute("src",upload.url);
+  message("Picture ready ("+Math.round(image.blob.size/1024)+" KB) as "+path.split("/").pop()+". Check the description still matches, then save.","ok");
+ }catch(error){message("Could not prepare the picture: "+explain(error),"error")}
+ finally{busy=false;refresh()}
+}
 
-/* Compact, full-page editing controls */
-const TOKEN_KEY="gunpowder-website-editor-token-v1";
-const remember=$("headerRemember");
-$("headerPage").value=$("page").value;
-$("headerPage").onchange=()=>{
- if(dirty&&!confirm("Discard unsaved changes and change page?")){$("headerPage").value=$("page").value;return}
- $("page").value=$("headerPage").value;
- if(token)load();else {clearEdit();showPublicPreview();message("Showing selected page. Connect to GitHub to edit.","ok")}
-};
-$("headerConnect").onclick=()=>{$("loginPanel").classList.toggle("open");if($("loginPanel").classList.contains("open"))$("headerToken").focus()};
-$("headerLogin").onclick=async()=>{
- const supplied=$("headerToken").value.trim()||token;
- if(!supplied)return message("Enter a GitHub access token.","error");
- token=supplied;$("token").value=supplied;
+/* ---------- Page SEO ---------- */
+const description=()=>pageDoc.querySelector('meta[name="description"]');
+function fillSeo(){
+ if(!pageDoc)return;
+ $("seoTitle").value=pageDoc.title;
+ $("seoDescription").value=description()?.getAttribute("content")||"";
+ seoCounts();
+}
+function seoCounts(){
+ for(const [input,output,low,high] of [["seoTitle","titleCount",30,60],["seoDescription","descriptionCount",120,160]]){
+  const length=$(input).value.length;
+  $(output).textContent=length+" characters · guide "+low+"–"+high;
+  $(output).className="count"+(length<low||length>high?" warn":"");
+ }
+ const headings=pageDoc.querySelectorAll("h1").length,noAlt=pageDoc.querySelectorAll("main img:not([alt]),main img[alt='']").length;
+ $("seoSummary").textContent="H1 headings on this page: "+headings+(headings===1?"":" (one is recommended)")+" · Pictures without a description: "+noAlt+" · Search engines: "+(pageDoc.querySelector('meta[name="robots"]')?.getAttribute("content")||"allowed");
+}
+function setSeo(kind,value){
+ checkpoint("seo-"+kind);
+ const old=kind==="title"?pageDoc.title:description()?.getAttribute("content")||"";
+ if(kind==="title")pageDoc.title=value;
+ else{
+  let meta=description();
+  if(!meta){meta=pageDoc.createElement("meta");meta.name="description";pageDoc.head.append(meta)}
+  meta.setAttribute("content",value);
+ }
+ const social=pageDoc.querySelector('meta[property="og:'+kind+'"]');
+ if(social&&social.getAttribute("content")===old)social.setAttribute("content",value);
+ seoCounts();refresh();
+}
+
+/* ---------- Load, save, connect ---------- */
+async function load(path){
+ busy=true;clearSelection();refresh();
  try{
-  const check=await github($("page").value);
-  if(!check.sha)throw Error("Could not verify this repository.");
-  if(remember.checked)try{localStorage.setItem(TOKEN_KEY,token)}catch(e){message("Browser could not remember your token: "+e.message,"error")}
-  else try{localStorage.removeItem(TOKEN_KEY)}catch(e){}
-  $("headerToken").value="";$("token").value="";
-  $("loginPanel").classList.remove("open");
-  enableSave();await load();
- }catch(e){token="";enableSave();message("Could not connect: "+e.message,"error")}
+  message("Loading page from GitHub…");
+  const result=await github(path);
+  const doc=parse(fromBase64(result.content));
+  if(!doc.querySelector("main"))throw Error("This page has no editable content area.");
+  pageDoc=doc;loaded={path,sha:result.sha,savedHTML:serialize(doc),guard:protectedParts(doc)};
+  undoStack=[];redoStack=[];editing=null;slide=0;
+  $("headerPage").value=path;
+  render();fillSeo();
+  message("Page loaded. Click text or a picture to select it; double-click text to type.","ok");
+ }finally{busy=false;refresh()}
+}
+async function openPage(){
+ const path=$("headerPage").value;
+ finishEditing();
+ if(isDirty()&&!confirm("Discard unsaved changes and change page?")){$("headerPage").value=loaded.path;return}
+ if(!token){showPublicPreview();return message("Showing page preview. Connect GitHub to edit.")}
+ try{await load(path)}
+ catch(error){if(loaded)$("headerPage").value=loaded.path;message("Could not load the page: "+explain(error),"error")}
+}
+async function discard(){
+ finishEditing();
+ if(!loaded||!confirm("Discard unsaved changes and reload this page from GitHub?"))return;
+ try{await load(loaded.path)}catch(error){message("Could not reload: "+explain(error),"error")}
+}
+async function save(){
+ finishEditing();
+ if(busy||!token||!isDirty())return;
+ if(protectedParts(pageDoc)!==loaded.guard)return message("Not saved: a shopping button, script or search-engine setting has changed. Press Undo or Discard.","error");
+ const page=loaded,html=serialize(pageDoc);
+ busy=true;refresh();
+ try{
+  const used=new Set([...pageDoc.querySelectorAll("img[src]")].map(img=>uploadFor(img.getAttribute("src"))));
+  const pending=uploads.filter(u=>used.has(u)&&!u.uploaded);
+  for(let i=0;i<pending.length;i++){
+   const u=pending[i],content=toBase64(await u.blob.arrayBuffer());
+   message("Uploading picture "+(i+1)+" of "+pending.length+"…");
+   try{await github(u.path,"PUT",{message:"Add website image "+u.path.split("/").pop(),content,branch:BRANCH})}
+   catch(error){
+    // An earlier attempt may have uploaded it before the connection dropped.
+    const existing=await github(u.path).catch(()=>null);
+    if(!existing||existing.content.replace(/\s/g,"")!==content)throw error;
+   }
+   u.uploaded=true;
+  }
+  message("Saving page to GitHub…");
+  const result=await github(page.path,"PUT",{message:"Update "+page.path+" using website visual editor",content:toBase64(new TextEncoder().encode(html)),sha:page.sha,branch:BRANCH});
+  page.sha=result.content.sha;page.savedHTML=html;lastCheckpoint="";
+  message("Saved to GitHub. The preview website usually updates within a few minutes.","ok");
+ }catch(error){message("Could not save. "+explain(error),"error")}
+ finally{busy=false;refresh()}
+}
+function savedToken(){try{return localStorage.getItem(TOKEN_KEY)||""}catch{return ""}}
+async function connect(supplied){
+ if(!supplied){$("loginPanel").classList.add("open");return message("Enter a GitHub access token.","error")}
+ const previous=token;token=supplied;
+ try{
+  await github($("headerPage").value);
+ }catch(error){
+  token=previous;$("loginPanel").classList.add("open");refresh();
+  return message("Could not connect. "+explain(error),"error");
+ }
+ try{
+  if($("headerRemember").checked)localStorage.setItem(TOKEN_KEY,token);else localStorage.removeItem(TOKEN_KEY);
+ }catch{}
+ $("headerToken").value="";$("loginPanel").classList.remove("open");refresh();
+ if(isDirty())return message("Reconnected. Your unsaved edits are still here.","ok");
+ try{await load($("headerPage").value)}catch(error){message("Connected, but the page could not load: "+explain(error),"error")}
+}
+function disconnect(){
+ finishEditing();
+ if(isDirty()&&!confirm("Discard unsaved edits and disconnect?"))return;
+ try{localStorage.removeItem(TOKEN_KEY)}catch{}
+ if(loaded)$("headerPage").value=loaded.path;
+ token="";pageDoc=null;loaded=null;items=[];undoStack=[];redoStack=[];
+ clearSelection();views=[];uploads.forEach(u=>URL.revokeObjectURL(u.url));uploads=[];
+ $("headerRemember").checked=false;$("seoPanel").classList.remove("open");
+ refresh();showPublicPreview();message("Disconnected and removed any saved token.","ok");
+}
+
+/* ---------- Controls ---------- */
+function shortcuts(e){
+ if(!(e.ctrlKey||e.metaKey))return;
+ const key=e.key.toLowerCase();
+ if(key==="s"){e.preventDefault();save()}
+ else if((key==="z"||key==="y")&&!editing&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){
+  e.preventDefault();if(key==="y"||e.shiftKey)redo();else undo();
+ }
+}
+document.addEventListener("keydown",shortcuts);
+$("headerPage").onchange=openPage;
+$("headerSave").onclick=save;
+$("headerDiscard").onclick=discard;
+$("undo").onclick=undo;
+$("redo").onclick=redo;
+$("headerDisconnect").onclick=disconnect;
+$("headerConnect").onclick=()=>{
+ if(!token&&savedToken())return connect(savedToken());
+ $("loginPanel").classList.toggle("open");
+ if($("loginPanel").classList.contains("open"))$("headerToken").focus();
 };
+$("headerLogin").onclick=()=>connect($("headerToken").value.trim()||token||savedToken());
 $("headerToken").onkeydown=e=>{if(e.key==="Enter")$("headerLogin").click()};
-$("headerDisconnect").onclick=()=>{
- if(dirty&&!confirm("Discard unsaved edits and disconnect?"))return;
- token="";pageDoc=null;originalSha="";dirty=false;uploads=[];
- try{localStorage.removeItem(TOKEN_KEY)}catch(e){}
- remember.checked=false;clearEdit();enableSave();showPublicPreview();message("Disconnected and removed saved browser token.","ok")
+$("viewToggle").onclick=()=>{
+ const on=$("previewShell").classList.toggle("mobile");
+ $("viewToggle").setAttribute("aria-pressed",String(on));
+ requestAnimationFrame(positionToolbar);
 };
-$("headerSave").onclick=()=>{$("save").click()};
-$("headerDiscard").onclick=()=>{$("reset").click()};
-$("floatDone").onclick=()=>{
- const selected=$("preview").contentDocument?.querySelector(".editor-inline");
- if(selected)endInlineEdit(selected);
- $("floatingTools").classList.remove("visible");
+$("seoButton").onclick=()=>{$("seoPanel").classList.toggle("open");fillSeo();positionToolbar()};
+$("seoTitle").oninput=()=>setSeo("title",$("seoTitle").value);
+$("seoDescription").oninput=()=>setSeo("description",$("seoDescription").value);
+$("floatDone").onclick=()=>{finishEditing();clearSelection()};
+$("floatHeading").onchange=()=>{finishEditing();changeTag($("floatHeading").value)};
+$("floatImageWidth").oninput=()=>setStyles({width:$("floatImageWidth").value+"%",height:"auto",maxWidth:"100%"},"width-"+selected);
+$("imageAlt").oninput=()=>{
+ if(selected<0)return;
+ checkpoint("alt-"+selected);
+ for(const el of [items[selected],views[selected]])el.setAttribute("alt",$("imageAlt").value);
+ refresh();
 };
-$("floatHeading").onchange=()=>{$("elementType").value=$("floatHeading").value;$("elementType").dispatchEvent(new Event("change"))};
-$("floatImageWidth").oninput=()=>{
- if(!active||active.tagName!=="IMG")return;
- active.style.width=$("floatImageWidth").value+"%";active.style.height="auto";active.style.maxWidth="100%";
- dirty=true;enableSave();
- const idx=selectedIndex(),el=$("preview").contentDocument?.querySelector('[data-editor-id="'+idx+'"]');
- if(el){el.style.width=active.style.width;el.style.height="auto";el.style.maxWidth="100%";positionToolbar(idx)}
-};
+$("imageFile").onchange=async e=>{const file=e.target.files[0];e.target.value="";await replaceImage(file)};
 $("floatingTools").addEventListener("click",event=>{
- const button=event.target.closest("button[data-float]");if(!button||!active)return;
+ const button=event.target.closest("button[data-float]");
+ if(!button||selected<0||busy)return;
  const action=button.dataset.float;
  if(action==="upload")return $("imageFile").click();
- if(action==="left"||action==="center"||action==="right")return horizontalAlign(action);
- if(action==="up"||action==="down")return moveSelected(action==="up"?-1:1);
- if(action==="reset")return $("resetFormatting").click();
- if(action==="bigger"||action==="smaller"){
-  if(active.tagName==="IMG")return;
-  const tag=active.tagName;
-  const defaultSize={H1:52,H2:38,H3:28,H4:22,P:17}[tag]||17;
-  const current=parseFloat(active.style.fontSize)||defaultSize;
-  return applyStyle("fontSize",Math.max(10,Math.min(120,current+(action==="bigger"?2:-2)))+"px");
- }
+ if(action==="edit")return startEditing(selected);
+ finishEditing();
+ const el=items[selected],computed=()=>frame.contentWindow.getComputedStyle(views[selected]);
+ if(action==="left"||action==="center"||action==="right")return align(action);
+ if(action==="up"||action==="down")return move(action==="up"?-1:1);
+ if(action==="reset")return setStyles(Object.fromEntries(STYLE_PROPS.map(p=>[p,""])));
+ if(action==="fit")return setStyles({objectFit:computed().objectFit==="cover"?"contain":"cover"});
+ if(action==="bigger"||action==="smaller")return resizeText(action==="bigger"?2:-2);
  if(action==="narrow"||action==="wide"){
-  if(active.tagName==="IMG")return;
-  const current=parseFloat(active.style.maxWidth)||100;
-  return applyStyle("maxWidth",Math.max(35,Math.min(100,current+(action==="wide"?5:-5)))+"%");
+  const current=el.style.maxWidth.endsWith("%")?parseFloat(el.style.maxWidth):100;
+  return setStyles({maxWidth:Math.max(35,Math.min(100,current+(action==="wide"?5:-5)))+"%"});
  }
  if(action==="spaceLess"||action==="spaceMore"){
-  const current=parseFloat(active.style.marginBottom)||0;
-  return applyStyle("marginBottom",Math.max(0,Math.min(200,current+(action==="spaceMore"?8:-8)))+"px");
+  const current=parseFloat(el.style.marginBottom||computed().marginBottom)||0;
+  return setStyles({marginBottom:Math.max(0,Math.min(200,Math.round(current)+(action==="spaceMore"?8:-8)))+"px"});
  }
 });
-$("preview").addEventListener("load",()=>{if(active)showToolbar(selectedIndex())});
-window.addEventListener("resize",()=>{if(active)positionToolbar(selectedIndex())});
-try{
- const stored=localStorage.getItem(TOKEN_KEY);
- if(stored){
-  remember.checked=true;
-  $("headerToken").value=stored;
-  message("Saved browser token found. Click Connect GitHub to use it.","ok");
-  $("headerConnect").textContent="Connect saved token";
- }
-}catch(e){}
-showPublicPreview();
-message("Showing homepage preview. Choose another page or connect to GitHub to edit.");
-window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
+window.addEventListener("resize",positionToolbar);
+window.addEventListener("beforeunload",e=>{commitText();if(isDirty()){e.preventDefault();e.returnValue=""}});
+
+$("headerRemember").checked=!!savedToken();
+refresh();showPublicPreview();
+message(savedToken()?"Saved token found. Click Connect saved token to start editing.":"Showing the homepage preview. Choose another page, or connect GitHub to edit.");
 </script>
 </body>
 </html>

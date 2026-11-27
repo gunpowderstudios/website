@@ -23,10 +23,58 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 .thumb{max-width:100%;max-height:150px;object-fit:contain;background:#f2eee8;border-radius:8px}input[type=range]{width:100%;accent-color:#a62b22}
 .topnote{background:#fff2d0;padding:10px;border-radius:8px}
 @media(max-width:770px){.frame{display:block}aside{max-height:none}.preview{height:70vh}}
+
+/* Full-width visual editor with compact top controls and floating selection tools */
+.frame{display:block;min-height:0}
+.frame aside{display:none}
+.frame main{position:relative;padding:0}
+.frame .preview{height:calc(100vh - 116px);border-radius:0;border:0}
+.header{flex-wrap:wrap;padding:10px 16px;gap:10px}
+.header h1{font-size:1rem}
+.top-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.top-controls select{width:auto;min-width:165px;padding:8px}
+.top-controls button{padding:8px 12px;font-size:.8rem}
+.top-controls button:disabled{opacity:.4}
+#loginPanel{display:none;flex-wrap:wrap;align-items:center;gap:8px;background:#fff8e6;padding:10px 15px;color:#2b241b;border-bottom:1px solid #dbceb2}
+#loginPanel.open{display:flex}
+#loginPanel input[type=password]{width:min(340px,100%);padding:9px}
+#loginPanel label{margin:0;font-size:.78rem}
+#loginPanel button{padding:9px}
+#loginPanel .note{flex-basis:100%;margin:3px 0}
+#editorNotice{font-size:.78rem;color:#635b4e;background:#fffaf1;padding:7px 16px;min-height:30px}
+#editorNotice.success{color:#24682d}
+#editorNotice.error{color:#a12b20}
+#floatingTools{position:absolute;z-index:100;display:none;align-items:center;flex-wrap:wrap;max-width:min(760px,calc(100vw - 18px));gap:4px;background:#211b16;color:#fff5de;padding:7px 9px;border-radius:11px;box-shadow:0 12px 36px #0005;border:1px solid #6b5744}
+#floatingTools.visible{display:flex}
+#floatingTools button,#floatingTools select,#floatingTools input{font:inherit;border-radius:6px;font-size:12px;min-height:32px}
+#floatingTools button{background:#42362b;color:#fff5e6;padding:6px 9px;border:1px solid #675446}
+#floatingTools button:hover{background:#7e4b22}
+#floatingTools button.strong{background:#bf4b21}
+#floatingTools select,#floatingTools input{padding:4px 6px;background:#fffaf1;color:#231a15;border:0}
+#floatingTools input[type=number]{width:58px}
+#floatingTools input[type=range]{width:94px;accent-color:#f89317}
+#floatingTools .sep{height:25px;width:1px;background:#715d4b;margin:0 3px}
+#floatingTools .tool-image,#floatingTools .tool-text{display:none;align-items:center;gap:4px;flex-wrap:wrap}
+#floatingTools.text-mode .tool-text,#floatingTools.image-mode .tool-image{display:flex}
+#floatingTools .tool-label{font-size:11px;color:#f2d0a7}
+@media(max-width:850px){.header{align-items:start}.top-controls{width:100%}.frame .preview{height:calc(100vh - 158px)}#floatingTools{gap:3px;padding:5px}#floatingTools button{padding:5px 7px}}
 </style>
 </head>
 <body>
-<div class="header"><h1>Gunpowder Studios · Website Editor</h1><a href="../">← View website</a></div>
+<div class="header">
+<h1>Gunpowder Studios · Editor</h1>
+<div class="top-controls">
+<select id="headerPage" aria-label="Choose page"><option value="index.html">Homepage</option><option value="book-of-dungeon/index.html">Book of Dungeon</option><option value="kastles-card-game/index.html">Kastles</option><option value="bag-of-dungeon/index.html">Bag of Dungeon</option><option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option><option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option><option value="7-moons/index.html">7 Moons</option><option value="rabbito/index.html">Rabbito</option><option value="cheese/index.html">Who Stole My Cheese?</option><option value="coming-soon/index.html">Coming Soon</option><option value="about-us/index.html">About Us</option><option value="contact-us/index.html">Contact Us</option><option value="shop/index.html">Shop</option></select>
+<button id="headerConnect" class="secondary">Connect GitHub</button><button id="headerDisconnect" class="secondary" hidden>Disconnect</button><button id="headerDiscard" class="secondary" disabled>Discard</button><button id="headerSave" disabled>Save to GitHub</button>
+<a href="../">View website</a>
+</div></div>
+<div id="loginPanel">
+<label for="headerToken">GitHub access token</label><input id="headerToken" type="password" autocomplete="off" placeholder="github_pat_…">
+<label><input id="headerRemember" type="checkbox"> Remember token on this browser</label>
+<button id="headerLogin">Connect</button>
+<p class="note">A saved token is stored on this browser only, but browser storage is not encrypted against scripts running on the same GitHub Pages origin. Use a short-lived, fine-grained token restricted to this repository. Never use this on a shared computer. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create limited token</a>.</p>
+</div>
+<div id="editorNotice" role="status" aria-live="polite">Select a page to preview. Connect GitHub to edit text or pictures.</div>
 <div class="frame">
 <aside>
 <h2>1. Connect to GitHub</h2>
@@ -91,7 +139,26 @@ button.secondary{background:#eee5d5;color:#2c2317}button:disabled{opacity:.45;cu
 <div class="actions"><button id="save" disabled>Save changes to GitHub</button><button id="reset" class="secondary" disabled>Discard edits</button></div>
 <div id="status" class="status">Not connected.</div>
 </aside>
-<main><div class="preview"><iframe id="preview" title="Website page preview" sandbox="allow-same-origin"></iframe></div></main>
+<main><div class="preview"><iframe id="preview" title="Website page preview" sandbox="allow-same-origin"></iframe></div>
+<div id="floatingTools" role="toolbar" aria-label="Edit selected page element">
+<div class="tool-text">
+<select id="floatHeading" title="Text style"><option value="P">Paragraph</option><option value="H1">H1</option><option value="H2">H2</option><option value="H3">H3</option><option value="H4">H4</option></select>
+<button data-float="smaller" title="Reduce text size">A−</button><button data-float="bigger" title="Enlarge text">A+</button>
+<div class="sep"></div>
+<button data-float="left" title="Align left">☰</button><button data-float="center" title="Centre text">≡</button><button data-float="right" title="Align right">☷</button>
+<button data-float="narrow" title="Narrow text box">⇥−</button><button data-float="wide" title="Widen text box">⇥+</button>
+</div>
+<div class="tool-image">
+<button data-float="upload" title="Replace picture">📷 Replace</button>
+<span class="tool-label">Width</span><input id="floatImageWidth" type="range" min="20" max="100" value="100" title="Image width percentage">
+<button data-float="left" title="Align image left">◧</button><button data-float="center" title="Centre image">▣</button><button data-float="right" title="Align image right">◨</button>
+</div>
+<div class="sep"></div>
+<button data-float="up" title="Move block up">↑</button><button data-float="down" title="Move block down">↓</button>
+<button data-float="spaceLess" title="Less space below">↕−</button><button data-float="spaceMore" title="More space below">↕+</button>
+<button data-float="reset" title="Clear custom formatting">↺</button>
+<button id="floatDone" class="strong" title="Finish editing">✓ Done</button>
+</div></main>
 </div>
 <script>
 "use strict";

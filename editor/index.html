@@ -417,6 +417,88 @@ $("save").onclick=async()=>{
   message("Saved to GitHub successfully! The updated page will appear after the Pages deployment completes.","ok");
  }catch(e){enableSave();message("Could not finish saving: "+e.message+"\nIf some images were uploaded, they are safely stored in GitHub; retry after checking the page.","error")}
 };
+
+/* Compact, full-page editing controls */
+const TOKEN_KEY="gunpowder-website-editor-token-v1";
+const remember=$("headerRemember");
+$("headerPage").value=$("page").value;
+$("headerPage").onchange=()=>{
+ if(dirty&&!confirm("Discard unsaved changes and change page?")){$("headerPage").value=$("page").value;return}
+ $("page").value=$("headerPage").value;
+ if(token)load();else {clearEdit();showPublicPreview();message("Showing selected page. Connect to GitHub to edit.","ok")}
+};
+$("headerConnect").onclick=()=>{$("loginPanel").classList.toggle("open");if($("loginPanel").classList.contains("open"))$("headerToken").focus()};
+$("headerLogin").onclick=async()=>{
+ const supplied=$("headerToken").value.trim()||token;
+ if(!supplied)return message("Enter a GitHub access token.","error");
+ token=supplied;$("token").value=supplied;
+ try{
+  const check=await github($("page").value);
+  if(!check.sha)throw Error("Could not verify this repository.");
+  if(remember.checked)try{localStorage.setItem(TOKEN_KEY,token)}catch(e){message("Browser could not remember your token: "+e.message,"error")}
+  else try{localStorage.removeItem(TOKEN_KEY)}catch(e){}
+  $("headerToken").value="";$("token").value="";
+  $("loginPanel").classList.remove("open");
+  enableSave();await load();
+ }catch(e){token="";enableSave();message("Could not connect: "+e.message,"error")}
+};
+$("headerToken").onkeydown=e=>{if(e.key==="Enter")$("headerLogin").click()};
+$("headerDisconnect").onclick=()=>{
+ if(dirty&&!confirm("Discard unsaved edits and disconnect?"))return;
+ token="";pageDoc=null;originalSha="";dirty=false;uploads=[];
+ try{localStorage.removeItem(TOKEN_KEY)}catch(e){}
+ remember.checked=false;clearEdit();enableSave();showPublicPreview();message("Disconnected and removed saved browser token.","ok")
+};
+$("headerSave").onclick=()=>{$("save").click()};
+$("headerDiscard").onclick=()=>{$("reset").click()};
+$("floatDone").onclick=()=>{
+ const selected=$("preview").contentDocument?.querySelector(".editor-inline");
+ if(selected)endInlineEdit(selected);
+ $("floatingTools").classList.remove("visible");
+};
+$("floatHeading").onchange=()=>{$("elementType").value=$("floatHeading").value;$("elementType").dispatchEvent(new Event("change"))};
+$("floatImageWidth").oninput=()=>{
+ if(!active||active.tagName!=="IMG")return;
+ active.style.width=$("floatImageWidth").value+"%";active.style.height="auto";active.style.maxWidth="100%";
+ dirty=true;enableSave();
+ const idx=selectedIndex(),el=$("preview").contentDocument?.querySelector('[data-editor-id="'+idx+'"]');
+ if(el){el.style.width=active.style.width;el.style.height="auto";el.style.maxWidth="100%";positionToolbar(idx)}
+};
+$("floatingTools").addEventListener("click",event=>{
+ const button=event.target.closest("button[data-float]");if(!button||!active)return;
+ const action=button.dataset.float;
+ if(action==="upload")return $("imageFile").click();
+ if(action==="left"||action==="center"||action==="right")return horizontalAlign(action);
+ if(action==="up"||action==="down")return moveSelected(action==="up"?-1:1);
+ if(action==="reset")return $("resetFormatting").click();
+ if(action==="bigger"||action==="smaller"){
+  if(active.tagName==="IMG")return;
+  const tag=active.tagName;
+  const defaultSize={H1:52,H2:38,H3:28,H4:22,P:17}[tag]||17;
+  const current=parseFloat(active.style.fontSize)||defaultSize;
+  return applyStyle("fontSize",Math.max(10,Math.min(120,current+(action==="bigger"?2:-2)))+"px");
+ }
+ if(action==="narrow"||action==="wide"){
+  if(active.tagName==="IMG")return;
+  const current=parseFloat(active.style.maxWidth)||100;
+  return applyStyle("maxWidth",Math.max(35,Math.min(100,current+(action==="wide"?5:-5)))+"%");
+ }
+ if(action==="spaceLess"||action==="spaceMore"){
+  const current=parseFloat(active.style.marginBottom)||0;
+  return applyStyle("marginBottom",Math.max(0,Math.min(200,current+(action==="spaceMore"?8:-8)))+"px");
+ }
+});
+$("preview").addEventListener("load",()=>{if(active)showToolbar(selectedIndex())});
+window.addEventListener("resize",()=>{if(active)positionToolbar(selectedIndex())});
+try{
+ const stored=localStorage.getItem(TOKEN_KEY);
+ if(stored){
+  remember.checked=true;
+  $("headerToken").value=stored;
+  message("Saved browser token found. Click Connect GitHub to use it.","ok");
+  $("headerConnect").textContent="Connect saved token";
+ }
+}catch(e){}
 showPublicPreview();
 message("Showing homepage preview. Choose another page or connect to GitHub to edit.");
 window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});

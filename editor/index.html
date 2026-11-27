@@ -37,8 +37,21 @@ input[type=text],input[type=password],textarea,select{border:1px solid #cbbca7;b
 #editorNotice.error{color:#a12b20;font-weight:700}
 
 /* Preview */
-main{position:relative;flex:1;min-height:0;overflow:hidden}
-.preview{height:100%;background:#fff}
+main{position:relative;flex:1;min-height:0;overflow:hidden;display:flex}
+.preview{flex:1;min-width:0;height:100%;background:#fff}
+#sectionsPanel{display:none;flex-direction:column;gap:10px;width:310px;overflow:auto;padding:14px;background:#fffaf1;border-left:1px solid #d7cbb8}
+#sectionsPanel.open{display:flex}
+#sectionsPanel h2{font-size:.95rem;margin:0}
+#sectionsPanel p{font-size:.76rem;color:#66594b;margin:0;line-height:1.5}
+#sectionsPanel label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:800}
+#sectionList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#sectionList li{border:1px solid #dbceb2;border-radius:10px;padding:8px;background:#fff}
+#sectionList li.current{border-color:#f89317;box-shadow:0 0 0 2px #f89317}
+#sectionList .name{display:block;width:100%;text-align:left;background:none;color:#241e17;padding:2px 0 7px;font-size:.82rem}
+#sectionList .row{display:flex;flex-wrap:wrap;gap:4px}
+#sectionList .row button{padding:5px 8px;font-size:.74rem;background:#eee5d5;color:#2c2317}
+#sectionList .row button.danger{color:#a12b20}
+@media(max-width:700px){#sectionsPanel{position:absolute;right:0;top:0;bottom:0;z-index:110;width:min(310px,90vw);box-shadow:-12px 0 36px #0004}}
 .preview.mobile{background:#2c261f;padding:10px 0}
 iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 .preview.mobile iframe{width:390px;max-width:100%;margin:0 auto;border-radius:18px}
@@ -82,6 +95,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
    <option value="apps/index.html">Apps</option>
   </select>
   <button id="viewToggle" class="secondary" aria-pressed="false" title="Preview at phone width">📱 Mobile</button>
+  <button id="sectionsButton" class="secondary" disabled aria-pressed="false" title="Add, duplicate, move or delete whole sections">▤ Sections</button>
   <button id="seoButton" class="secondary" disabled title="Page title and search description">Page SEO</button>
   <button id="undo" class="secondary" disabled title="Undo (Ctrl/⌘+Z)">↶ Undo</button>
   <button id="redo" class="secondary" disabled title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
@@ -132,8 +146,23 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
   <button data-float="up" title="Move block up" aria-label="Move block up">↑</button><button data-float="down" title="Move block down" aria-label="Move block down">↓</button>
   <button data-float="spaceLess" title="Less space below">Space −</button><button data-float="spaceMore" title="More space below">Space +</button>
   <button data-float="reset" title="Clear custom formatting" aria-label="Clear custom formatting">↺</button>
+  <button data-float="section" title="Add, duplicate, move or delete this whole section">▤ Section</button>
   <button id="floatDone" class="strong" title="Finish editing">✓ Done</button>
  </div>
+ <aside id="sectionsPanel" aria-label="Page sections">
+  <h2>Page sections</h2>
+  <p>Top to bottom. Click a name to find it on the page. Changes can be undone.</p>
+  <label>New section style
+   <select id="newSection">
+    <option value="text">Heading and text</option>
+    <option value="picture-left">Picture left, text right</option>
+    <option value="picture-right">Text left, picture right</option>
+    <option value="picture">Full-width picture</option>
+    <option value="gallery">Three pictures</option>
+   </select>
+  </label>
+  <ol id="sectionList"></ol>
+ </aside>
 </main>
 <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif" hidden>
 
@@ -189,7 +218,8 @@ function editableList(doc){
 function protectedParts(doc){
  return JSON.stringify([
   [...doc.querySelectorAll('meta[name="robots"],link[rel="canonical"]')].map(e=>e.outerHTML),
-  [...doc.querySelectorAll("a[href]")].filter(a=>SHOP_LINK.test(a.getAttribute("href"))).map(a=>[a.getAttribute("href"),a.className,a.textContent,a.target,a.rel]),
+  // Each different shopping button must still exist; duplicated sections may repeat one.
+  [...new Set([...doc.querySelectorAll("a[href]")].filter(a=>SHOP_LINK.test(a.getAttribute("href"))).map(a=>JSON.stringify([!!a.closest("header"),a.getAttribute("href"),a.className,a.textContent,a.target,a.rel])))].sort(),
   [...doc.querySelectorAll("script")].map(s=>s.outerHTML)
  ]);
 }
@@ -202,6 +232,8 @@ function refresh(){
  $("undo").disabled=busy||!undoStack.length;
  $("redo").disabled=busy||!redoStack.length;
  $("seoButton").disabled=!pageDoc;
+ $("sectionsButton").disabled=!pageDoc;
+ listSections();
  $("headerPage").disabled=busy;
  $("headerDisconnect").disabled=busy;
  $("headerDisconnect").hidden=!token;
@@ -250,6 +282,7 @@ function render(keepScroll=false){
   bindPreview(d);showSlide(d,slide);
   if(scroll)frame.contentWindow.scrollTo({top:scroll,behavior:"instant"});
   if(selected>=0)select(selected);
+  if(currentSection>=0&&$("sectionsPanel").classList.contains("open"))showSection(currentSection);
  };
  views=[];
  frame.srcdoc=serialize(copy);
@@ -274,6 +307,7 @@ function bindPreview(d){
  const style=d.createElement("style");
  style.textContent="html{scroll-behavior:auto!important}"+
   (token?"[data-editor-id]{cursor:pointer!important}[data-editor-id]:hover{outline:3px dashed #f89317!important;outline-offset:3px}":"")+
+  "main>.editor-section{outline:4px dashed #f89317!important;outline-offset:-4px}"+
   "[data-editor-id].editor-picked{outline:4px solid #ff8125!important;outline-offset:3px}"+
   "[data-editor-id].editor-inline{outline:3px solid #f89317!important;outline-offset:4px;white-space:normal!important;min-height:1.2em;cursor:text!important}";
  d.head.append(style);
@@ -397,7 +431,7 @@ function positionToolbar(){
  let y=top-bar.offsetHeight-9;                          // above the selection
  if(y<8)y=bottom+9;                                     // otherwise below it
  y=Math.max(8,Math.min(y,main.clientHeight-bar.offsetHeight-8));
- bar.style.left=Math.max(8,Math.min(fr.left-mr.left+er.left,main.clientWidth-bar.offsetWidth-8))+"px";
+ bar.style.left=Math.max(8,Math.min(fr.left-mr.left+er.left,$("previewShell").offsetWidth-bar.offsetWidth-8))+"px";
  bar.style.top=y+"px";
 }
 
@@ -449,6 +483,95 @@ function changeTag(tag){
  // Elements created after binding are covered by the delegated preview events.
  view.classList.add("editor-picked");
  refresh();positionToolbar();message("Text style changed to "+(tag==="P"?"paragraph":tag)+".","ok");
+}
+
+/* ---------- Whole sections ---------- */
+const sectionsOf=doc=>[...doc.querySelector("main").children];
+let currentSection=-1;
+function sectionName(section,i){
+ const heading=section.querySelector("h1,h2,h3");
+ const text=(heading&&[...heading.childNodes].map(n=>n.nodeName==="BR"?" ":n.textContent).join(""))||section.getAttribute("aria-label")||section.querySelector("img[alt]:not([alt=''])")?.alt||section.textContent.trim()||"Picture";
+ const name=text.replace(/\s+/g," ").trim();
+ return (i+1)+". "+(name.length>44?name.slice(0,43)+"…":name);
+}
+function listSections(){
+ const list=$("sectionList");
+ if(!pageDoc){list.replaceChildren();return}
+ if(!$("sectionsPanel").classList.contains("open"))return;
+ const all=sectionsOf(pageDoc);
+ // Only rebuild when something changed, so keyboard focus is not lost while typing.
+ const state=currentSection+"|"+busy+"|"+all.map(sectionName).join("|");
+ if(list.dataset.state===state&&list.children.length)return;
+ list.dataset.state=state;
+ list.replaceChildren(...all.map((section,i)=>{
+  const item=document.createElement("li");item.classList.toggle("current",i===currentSection);
+  const button=(text,action,title,off)=>{const b=document.createElement("button");b.type="button";b.textContent=text;b.dataset.section=action;b.dataset.index=i;b.title=title;b.disabled=busy||off;return b};
+  const name=button(sectionName(section,i),"show","Show on the page");name.className="name";
+  const row=document.createElement("div");row.className="row";
+  const remove=button("Delete","delete","Delete this section");remove.className="danger";
+  row.append(button("↑","up","Move section up",i===0),button("↓","down","Move section down",i===all.length-1),button("Duplicate","duplicate","Make a copy below"),button("+ Add below","add","Add a new section below, in the style chosen above"),remove);
+  item.append(name,row);return item;
+ }));
+}
+function showSection(i){
+ const d=frame.contentDocument,section=d?.querySelector("main")?.children[i];
+ d?.querySelectorAll(".editor-section").forEach(el=>el.classList.remove("editor-section"));
+ if(!section)return;
+ section.classList.add("editor-section");
+ const header=d.querySelector("header")?.offsetHeight||0;
+ frame.contentWindow.scrollTo({top:section.getBoundingClientRect().top+frame.contentWindow.scrollY-header,behavior:"instant"});
+}
+function openSections(open){
+ $("sectionsPanel").classList.toggle("open",open);
+ $("sectionsButton").setAttribute("aria-pressed",String(open));
+ if(!open){currentSection=-1;frame.contentDocument?.querySelectorAll(".editor-section").forEach(el=>el.classList.remove("editor-section"))}
+ listSections();requestAnimationFrame(positionToolbar);
+}
+function newSection(kind){
+ const up="../".repeat(loaded.path.split("/").length-1);
+ const picture='<img src="'+up+'images/section-placeholder.svg" alt="" width="1200" height="800" loading="lazy">';
+ const words='<div><h2>New heading</h2><p>Double-click to write your text.</p></div>';
+ const inner={text:words,"picture-left":'<div class="gs-split"><div>'+picture+'</div>'+words+'</div>',"picture-right":'<div class="gs-split">'+words+'<div>'+picture+'</div></div>',picture:'<div>'+picture+'</div>',gallery:'<div class="gs-gallery">'+('<div>'+picture+'</div>').repeat(3)+'</div>'}[kind];
+ if(!pageDoc.getElementById("gs-section-styles")){
+  const style=pageDoc.createElement("style");style.id="gs-section-styles";
+  style.textContent=".gs-section{padding:4rem 0}.gs-wrap{width:min(1180px,calc(100% - 36px));margin-inline:auto}.gs-section h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(2.2rem,4.5vw,4rem);line-height:1.05;margin:0 0 1rem}.gs-section p{font-size:1.08rem;max-width:720px}.gs-section img{display:block;width:100%;height:auto;border-radius:20px}.gs-split{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}.gs-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.gs-gallery img{aspect-ratio:4/3;object-fit:cover}@media(max-width:720px){.gs-split,.gs-gallery{grid-template-columns:1fr;gap:1.5rem}}\n";
+  pageDoc.head.append(style);
+ }
+ const section=pageDoc.createElement("section");section.className="gs-section";
+ section.innerHTML='<div class="gs-wrap">'+inner+'</div>';
+ return section;
+}
+function changeSection(action,i){
+ if(busy||!pageDoc||!token)return;
+ finishEditing();clearSelection();
+ const section=sectionsOf(pageDoc)[i];if(!section)return;
+ currentSection=i;
+ if(action==="show"){listSections();return showSection(i)}
+ let done="";
+ if(action==="up"||action==="down"){
+  const other=action==="up"?section.previousElementSibling:section.nextElementSibling;if(!other)return;
+  checkpoint();if(action==="up")other.before(section);else other.after(section);
+  currentSection=i+(action==="up"?-1:1);done="Section moved.";
+ }else if(action==="add"){
+  checkpoint();section.after(newSection($("newSection").value));currentSection=i+1;
+  done="New section added. Double-click its text, or click a picture and press Replace.";
+ }else if(action==="duplicate"){
+  if(section.querySelector(".hero-slider"))return message("The homepage slideshow cannot be duplicated, because only one slideshow can run on a page.","error");
+  checkpoint();
+  const copy=section.cloneNode(true);
+  // Names used by page links must stay unique, so the copy does not keep them.
+  for(const el of [copy,...copy.querySelectorAll("*")])for(const attr of ["id","aria-labelledby"])el.removeAttribute(attr);
+  section.after(copy);currentSection=i+1;
+  done="Section duplicated."+(copy.querySelector("h1")?" The copy has a second H1 heading: select it and change it to H2 for search engines.":"");
+ }else if(action==="delete"){
+  if(sectionsOf(pageDoc).length===1)return message("A page needs at least one section.","error");
+  const test=pageDoc.cloneNode(true);sectionsOf(test)[i].remove();
+  if(protectedParts(test)!==loaded.guard)return message("This section holds Amazon or Etsy buttons that appear nowhere else on the page, so it cannot be deleted.","error");
+  const linked=[section,...section.querySelectorAll("[id]")].some(el=>el.id&&pageDoc.querySelector('a[href="#'+el.id+'"]'));
+  if(!confirm("Delete section "+sectionName(section,i)+"?"+(linked?"\n\nA button on this page jumps to this section and will stop working.":"")+"\n\nYou can bring it back with Undo."))return;
+  checkpoint();section.remove();currentSection=-1;done="Section deleted. Press Undo to bring it back.";
+ }
+ render(true);fillSeo();refresh();message(done,"ok");
 }
 
 /* ---------- Pictures ---------- */
@@ -541,7 +664,7 @@ async function load(path){
   const doc=parse(fromBase64(result.content));
   if(!doc.querySelector("main"))throw Error("This page has no editable content area.");
   pageDoc=doc;loaded={path,sha:result.sha,savedHTML:serialize(doc),guard:protectedParts(doc)};
-  undoStack=[];redoStack=[];editing=null;slide=0;
+  undoStack=[];redoStack=[];editing=null;slide=0;currentSection=-1;
   $("headerPage").value=path;
   render();fillSeo();
   message("Page loaded. Click text or a picture to select it; double-click text to type.","ok");
@@ -611,7 +734,7 @@ function disconnect(){
  if(loaded)$("headerPage").value=loaded.path;
  token="";pageDoc=null;loaded=null;items=[];undoStack=[];redoStack=[];
  clearSelection();views=[];uploads.forEach(u=>URL.revokeObjectURL(u.url));uploads=[];
- $("headerRemember").checked=false;$("seoPanel").classList.remove("open");
+ $("headerRemember").checked=false;$("seoPanel").classList.remove("open");openSections(false);
  refresh();showPublicPreview();message("Disconnected and removed any saved token.","ok");
 }
 
@@ -643,6 +766,8 @@ $("viewToggle").onclick=()=>{
  $("viewToggle").setAttribute("aria-pressed",String(on));
  requestAnimationFrame(positionToolbar);
 };
+$("sectionsButton").onclick=()=>openSections(!$("sectionsPanel").classList.contains("open"));
+$("sectionList").onclick=e=>{const b=e.target.closest("button[data-section]");if(b)changeSection(b.dataset.section,Number(b.dataset.index))};
 $("seoButton").onclick=()=>{$("seoPanel").classList.toggle("open");fillSeo();positionToolbar()};
 $("seoTitle").oninput=()=>setSeo("title",$("seoTitle").value);
 $("seoDescription").oninput=()=>setSeo("description",$("seoDescription").value);
@@ -662,6 +787,12 @@ $("floatingTools").addEventListener("click",event=>{
  const action=button.dataset.float;
  if(action==="upload")return $("imageFile").click();
  if(action==="edit")return startEditing(selected);
+ if(action==="section"){
+  const index=sectionsOf(pageDoc).findIndex(section=>section.contains(items[selected]));
+  finishEditing();clearSelection();currentSection=index;openSections(true);
+  $("sectionList").children[index]?.scrollIntoView({block:"nearest"});
+  return showSection(index);
+ }
  finishEditing();
  const el=items[selected],computed=()=>frame.contentWindow.getComputedStyle(views[selected]);
  if(action==="left"||action==="center"||action==="right")return align(action);

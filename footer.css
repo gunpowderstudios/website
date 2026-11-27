@@ -1,0 +1,12 @@
+/* One footer design for every page. */
+footer.site-footer{background:#0d0c0a;color:#bfb4a2;padding:3.5rem 0 2rem;margin:0;font-size:1rem;line-height:1.55;text-align:left}
+.site-footer .wrap{display:block;width:min(1180px,calc(100% - 36px));margin-inline:auto}
+.site-footer .footer-grid{display:grid;grid-template-columns:1.4fr .6fr .6fr;gap:3rem}
+.site-footer h3{font-family:Georgia,"Times New Roman",serif;font-size:1.2rem;font-weight:700;line-height:1.04;letter-spacing:normal;color:#f5e5c5;margin:0 0 .8rem}
+.site-footer p{color:#bfb4a2;font-size:1rem;margin:1rem 0}
+.site-footer a{display:block;color:#bfb4a2;font-weight:400;text-decoration:none;margin:.35rem 0}
+.site-footer a:hover{color:#f1c36f}
+.site-footer a:focus-visible{outline:2px solid #f89317;outline-offset:3px}
+.site-footer .copyright{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.09);font-size:.8rem;color:#948a7b}
+@media(max-width:900px){.site-footer .footer-grid{grid-template-columns:1fr 1fr}.site-footer .footer-grid>div:first-child{grid-column:span 2}}
+@media(max-width:720px){.site-footer .footer-grid{grid-template-columns:1fr;gap:1.5rem}.site-footer .footer-grid>div:first-child{grid-column:auto}}

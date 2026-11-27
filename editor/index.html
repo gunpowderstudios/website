@@ -44,6 +44,7 @@ main{position:relative;flex:1;min-height:0;overflow:hidden;display:flex}
 #sectionsPanel h2{font-size:.95rem;margin:0}
 #sectionsPanel p{font-size:.76rem;color:#66594b;margin:0;line-height:1.5}
 #sectionsPanel label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:800}
+#videoFields{display:flex;flex-direction:column;gap:8px}
 #sectionList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 #sectionList li{border:1px solid #dbceb2;border-radius:10px;padding:8px;background:#fff}
 #sectionList li.current{border-color:#f89317;box-shadow:0 0 0 2px #f89317}
@@ -67,8 +68,9 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 #floatingTools input[type=range]{width:94px;accent-color:#f89317}
 #floatingTools svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 #floatingTools .sep{height:25px;width:1px;background:#715d4b;margin:0 3px}
-#floatingTools .tool-image,#floatingTools .tool-text{display:none;align-items:center;gap:4px;flex-wrap:wrap}
-#floatingTools.text-mode .tool-text,#floatingTools.image-mode .tool-image{display:flex}
+#floatingTools .tool-video,#floatingTools .tool-image,#floatingTools .tool-text{display:none;align-items:center;gap:4px;flex-wrap:wrap}
+#floatingTools.text-mode .tool-text,#floatingTools.image-mode .tool-image,#floatingTools.video-mode .tool-video{display:flex}
+#videoUrl{width:min(320px,60vw)}
 #floatingTools .tool-label{font-size:11px;color:#f2d0a7}
 #imageAlt{width:min(300px,60vw)}
 @media(max-width:850px){.top-controls{width:100%}#floatingTools{gap:3px;padding:5px}#floatingTools button{padding:5px 7px}}
@@ -96,6 +98,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
   </select>
   <button id="viewToggle" class="secondary" aria-pressed="false" title="Preview at phone width">📱 Mobile</button>
   <button id="sectionsButton" class="secondary" disabled aria-pressed="false" title="Add, duplicate, move or delete whole sections">▤ Sections</button>
+  <button id="videoButton" class="secondary" disabled title="Add a YouTube video">▶ Video</button>
   <button id="seoButton" class="secondary" disabled title="Page title and search description">Page SEO</button>
   <button id="undo" class="secondary" disabled title="Undo (Ctrl/⌘+Z)">↶ Undo</button>
   <button id="redo" class="secondary" disabled title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
@@ -138,6 +141,10 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
    <button data-float="fit" title="Switch between showing the full picture and filling the frame">Fit / Fill</button>
    <span class="tool-label">Description</span><input id="imageAlt" type="text" aria-label="Image description (alt text)" placeholder="Describe what the picture shows">
   </div>
+  <div class="tool-video">
+   <span class="tool-label">YouTube link</span><input id="videoUrl" type="text" aria-label="YouTube link">
+   <button data-float="narrow" title="Smaller video">Width −</button><button data-float="wide" title="Bigger video">Width +</button>
+  </div>
   <div class="sep"></div>
   <button data-float="left" title="Align left" aria-label="Align left"><svg viewBox="0 0 16 16"><path d="M2 3h12M2 8h7M2 13h10"/></svg></button>
   <button data-float="center" title="Centre" aria-label="Centre"><svg viewBox="0 0 16 16"><path d="M2 3h12M4.5 8h7M3 13h10"/></svg></button>
@@ -159,8 +166,15 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
     <option value="picture-right">Text left, picture right</option>
     <option value="picture">Full-width picture</option>
     <option value="gallery">Three pictures</option>
+    <option value="video">YouTube video</option>
    </select>
   </label>
+  <div id="videoFields" hidden>
+   <label>YouTube link <input id="videoLink" type="text" placeholder="https://www.youtube.com/watch?v=…"></label>
+   <label>Heading (optional) <input id="videoHeading" type="text"></label>
+   <button id="addVideo" type="button">Add video</button>
+   <p>It goes below the highlighted section, or at the end of the page. You can also use + Add below on any section.</p>
+  </div>
   <ol id="sectionList"></ol>
  </aside>
 </main>
@@ -171,7 +185,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 "use strict";
 const OWNER="gunpowderstudios",REPO="website",BRANCH="main";
 const TOKEN_KEY="gunpowder-website-editor-token-v1";
-const EDITABLE=":is(h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,dt,dd,address,img,.eyebrow,.tick,.upcoming-release,.kicker,.fact>strong,.fact>span,.play-card>strong)";
+const EDITABLE=":is(h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,dt,dd,address,img,.eyebrow,.tick,.upcoming-release,.gs-video,.kicker,.fact>strong,.fact>span,.play-card>strong)";
 const SHOP_LINK=/amazon\.|amzn\.|etsy\.com/i;
 const IMAGE_LINK=/\.(png|jpe?g|webp|gif|avif)$/i;
 const STYLE_PROPS=["fontSize","maxWidth","textAlign","width","height","objectFit","marginTop","marginBottom","marginLeft","marginRight","display"];
@@ -210,8 +224,10 @@ function fromBase64(text){return new TextDecoder().decode(Uint8Array.from(atob(t
 const parse=html=>new DOMParser().parseFromString(html,"text/html");
 // Keeps the end of the file stable, so repeated saves do not add blank lines.
 const serialize=doc=>"<!doctype html>\n"+doc.documentElement.outerHTML.replace(/\s*<\/body><\/html>$/,"\n</body></html>")+"\n";
+const isVideo=el=>el.classList.contains("gs-video");
+const isText=el=>el.tagName!=="IMG"&&!isVideo(el);
 function editableList(doc){
- return [...doc.querySelectorAll("main "+EDITABLE)].filter(el=>el.tagName==="IMG"||
+ return [...doc.querySelectorAll("main "+EDITABLE)].filter(el=>el.tagName==="IMG"||isVideo(el)||
   (!el.querySelector("img,button,video,input,div,p,ul,ol")&&![...el.querySelectorAll("a[href]")].some(a=>SHOP_LINK.test(a.getAttribute("href")))&&!el.parentElement.closest(EDITABLE)));
 }
 // Things the editor must never change: shopping buttons, scripts and search-engine settings.
@@ -233,6 +249,8 @@ function refresh(){
  $("redo").disabled=busy||!redoStack.length;
  $("seoButton").disabled=!pageDoc;
  $("sectionsButton").disabled=!pageDoc;
+ $("videoButton").disabled=!pageDoc;
+ $("addVideo").disabled=busy||!pageDoc;
  listSections();
  $("headerPage").disabled=busy;
  $("headerDisconnect").disabled=busy;
@@ -274,6 +292,7 @@ function render(keepScroll=false){
  const base=copy.createElement("base");base.href=pageBase(loaded.path);copy.head.prepend(base);
  items=editableList(pageDoc);
  editableList(copy).forEach((el,i)=>el.dataset.editorId=String(i));
+ copy.querySelectorAll("main .gs-video").forEach(previewVideo);
  // Pictures uploaded in this session are not on the live preview site yet.
  copy.querySelectorAll("img").forEach(img=>{const u=uploadFor(img.getAttribute("src"));if(u){img.removeAttribute("onerror");img.setAttribute("src",u.url)}});
  frame.onload=()=>{
@@ -294,6 +313,7 @@ function repairImage(img){
  const next=[img.dataset.fallback,img.dataset.png,inline&&inline[1]].find(s=>s&&!tried.includes(s));
  if(next){img.dataset.editorTried=tried.concat(next).join("|");img.src=next;return}
  if(img.src.startsWith("data:"))return;
+ if(img.dataset.video){img.style.visibility="hidden";return}  // no thumbnail: the black box and label remain
  const name=(img.getAttribute("src")||"").split("/").pop().replace(/[<>&]/g,"");
  img.src="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#3a3026"/><g fill="#f2d0a7" font-family="sans-serif" text-anchor="middle"><text x="300" y="190" font-size="28">No picture yet</text><text x="300" y="228" font-size="17">'+name+'</text></g></svg>');
 }
@@ -340,7 +360,7 @@ function bindPreview(d){
  d.addEventListener("dragstart",e=>e.preventDefault(),true);
  d.addEventListener("dblclick",e=>{
   const el=e.target.closest("[data-editor-id]");
-  if(el&&el.tagName!=="IMG"){e.preventDefault();startEditing(Number(el.dataset.editorId))}
+  if(el&&isText(items[Number(el.dataset.editorId)])){e.preventDefault();startEditing(Number(el.dataset.editorId))}
  },true);
  d.addEventListener("input",()=>commitText(),true);
  d.addEventListener("focusout",e=>{if(editing&&e.target===views[editing.id])finishEditing()},true);
@@ -372,7 +392,7 @@ function insertBreak(d){
  commitText();
 }
 function startEditing(id){
- if(!token||!views[id])return;
+ if(!token||!views[id]||!isText(items[id]))return;
  if(editing&&editing.id===id)return;
  finishEditing();select(id);
  const view=views[id],d=frame.contentDocument;
@@ -405,7 +425,7 @@ function finishEditing(){
 function clearSelection(){
  views[selected]?.classList.remove("editor-picked");
  selected=-1;lastCheckpoint="";
- $("floatingTools").classList.remove("visible","text-mode","image-mode");
+ $("floatingTools").classList.remove("visible","text-mode","image-mode","video-mode");
 }
 function select(id){
  if(!token){message("Connect GitHub to edit this page.");return}
@@ -413,8 +433,11 @@ function select(id){
  if(selected!==id){views[selected]?.classList.remove("editor-picked");lastCheckpoint=""}
  selected=id;view.classList.add("editor-picked");
  const bar=$("floatingTools"),isImage=el.tagName==="IMG";
- bar.classList.add("visible");bar.classList.toggle("image-mode",isImage);bar.classList.toggle("text-mode",!isImage);
- if(isImage){
+ bar.classList.add("visible");bar.classList.toggle("image-mode",isImage);bar.classList.toggle("video-mode",isVideo(el));bar.classList.toggle("text-mode",isText(el));
+ if(isVideo(el)){
+  const video=youtube(el.querySelector("iframe")?.getAttribute("src"));
+  $("videoUrl").value=video?watchLink(video):"";
+ }else if(isImage){
   $("floatImageWidth").value=Math.max(20,Math.min(100,parseFloat(el.style.width)||100));
   $("imageAlt").value=el.getAttribute("alt")||"";
  }else{
@@ -447,7 +470,7 @@ function setStyles(styles,key=""){
  message("Layout updated in the preview. Check Mobile view too, then save.","ok");
 }
 function align(side){
- if(items[selected].tagName==="IMG")setStyles({display:"block",marginLeft:side==="left"?"0":"auto",marginRight:side==="right"?"0":"auto"});
+ if(!isText(items[selected]))setStyles({display:"block",marginLeft:side==="left"?"0":"auto",marginRight:side==="right"?"0":"auto"});
  else setStyles({textAlign:side});
 }
 function resizeText(step){
@@ -490,7 +513,7 @@ const sectionsOf=doc=>[...doc.querySelector("main").children];
 let currentSection=-1;
 function sectionName(section,i){
  const heading=section.querySelector("h1,h2,h3");
- const text=(heading&&[...heading.childNodes].map(n=>n.nodeName==="BR"?" ":n.textContent).join(""))||section.getAttribute("aria-label")||section.querySelector("img[alt]:not([alt=''])")?.alt||section.textContent.trim()||"Picture";
+ const text=(heading&&[...heading.childNodes].map(n=>n.nodeName==="BR"?" ":n.textContent).join(""))||section.getAttribute("aria-label")||section.querySelector("img[alt]:not([alt=''])")?.alt||section.querySelector("iframe[title]")?.title||section.textContent.trim()||"Picture";
  const name=text.replace(/\s+/g," ").trim();
  return (i+1)+". "+(name.length>44?name.slice(0,43)+"…":name);
 }
@@ -553,8 +576,11 @@ function changeSection(action,i){
   checkpoint();if(action==="up")other.before(section);else other.after(section);
   currentSection=i+(action==="up"?-1:1);done="Section moved.";
  }else if(action==="add"){
-  checkpoint();section.after(newSection($("newSection").value));currentSection=i+1;
-  done="New section added. Double-click its text, or click a picture and press Replace.";
+  const kind=$("newSection").value,video=kind==="video"?youtube($("videoLink").value):null;
+  if(kind==="video"&&!video){$("videoLink").focus();return message("Paste a YouTube video link first (copy it from YouTube\u2019s Share button).","error")}
+  checkpoint();section.after(video?videoSection(video,$("videoHeading").value.trim()):newSection(kind));currentSection=i+1;
+  done=video?"Video added. The editor shows its thumbnail; it plays on the saved web page.":"New section added. Double-click its text, or click a picture and press Replace.";
+  if(video){$("videoLink").value="";$("videoHeading").value=""}
  }else if(action==="duplicate"){
   if(section.querySelector(".hero-slider"))return message("The homepage slideshow cannot be duplicated, because only one slideshow can run on a page.","error");
   checkpoint();
@@ -572,6 +598,59 @@ function changeSection(action,i){
   checkpoint();section.remove();currentSection=-1;done="Section deleted. Press Undo to bring it back.";
  }
  render(true);fillSeo();refresh();message(done,"ok");
+}
+
+/* ---------- YouTube videos ---------- */
+// Accepts the usual kinds of YouTube address: watch, youtu.be, Shorts, live and embed links.
+function youtube(text){
+ let url;
+ try{url=new URL(/^https?:\/\//i.test((text||"").trim())?text.trim():"https://"+(text||"").trim())}catch{return null}
+ const host=url.hostname.replace(/^(www|m|music)\./,""),parts=url.pathname.split("/").filter(Boolean);
+ let id="";
+ if(host==="youtu.be")id=parts[0];
+ else if(host==="youtube.com"||host==="youtube-nocookie.com")id=parts[0]==="watch"?url.searchParams.get("v"):["shorts","embed","live"].includes(parts[0])?parts[1]:"";
+ if(!/^[\w-]{11}$/.test(id||""))return null;
+ const time=/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(url.searchParams.get("t")||url.searchParams.get("start")||"");
+ const start=time?(+time[1]||0)*3600+(+time[2]||0)*60+(+time[3]||0):0;
+ return{id,start,short:parts[0]==="shorts"};
+}
+const embedLink=v=>"https://www.youtube-nocookie.com/embed/"+v.id+(v.start?"?start="+v.start:"");
+const watchLink=v=>(v.short?"https://www.youtube.com/shorts/":"https://www.youtube.com/watch?v=")+v.id+(v.start?(v.short?"?":"&")+"t="+v.start:"");
+function videoSection(video,heading){
+ if(!pageDoc.getElementById("gs-video-styles")){
+  const style=pageDoc.createElement("style");style.id="gs-video-styles";
+  style.textContent=".gs-video{position:relative;width:100%;aspect-ratio:16/9;margin-inline:auto;border-radius:20px;overflow:hidden;background:#000}.gs-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.gs-video.gs-short{aspect-ratio:9/16;max-width:360px}\n";
+  pageDoc.head.append(style);
+ }
+ const section=newSection("picture"),wrap=section.firstElementChild;wrap.replaceChildren();
+ if(heading){const title=pageDoc.createElement("h2");title.textContent=heading;wrap.append(title)}
+ const box=pageDoc.createElement("div");box.className="gs-video"+(video.short?" gs-short":"");
+ const player=pageDoc.createElement("iframe");
+ for(const [name,value] of [["src",embedLink(video)],["title",heading||"YouTube video"],["loading","lazy"],["referrerpolicy","strict-origin-when-cross-origin"],["allow","accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"],["allowfullscreen",""]])player.setAttribute(name,value);
+ box.append(player);wrap.append(box);return section;
+}
+// Players cannot run inside the editor preview, so it shows the video's thumbnail instead.
+function previewVideo(box){
+ const video=youtube(box.querySelector("iframe,img")?.getAttribute(box.querySelector("iframe")?"src":"data-video"));
+ if(!video)return;
+ const d=box.ownerDocument,picture=d.createElement("img"),badge=d.createElement("span");
+ picture.src="https://i.ytimg.com/vi/"+video.id+"/hqdefault.jpg";picture.alt="Video thumbnail";picture.dataset.video=embedLink(video);
+ picture.setAttribute("style","position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0");
+ badge.textContent="▶ YouTube video";
+ badge.setAttribute("style","position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#c4161c;color:#fff;font:700 16px system-ui,sans-serif;padding:12px 20px;border-radius:12px;white-space:nowrap");
+ box.replaceChildren(picture,badge);
+}
+function changeVideo(){
+ if(selected<0||!isVideo(items[selected]))return;
+ const video=youtube($("videoUrl").value);
+ if(!video)return message("That does not look like a YouTube video link. Copy it from YouTube\u2019s Share button.","error");
+ checkpoint();
+ for(const el of [items[selected],views[selected]])el.classList.toggle("gs-short",video.short);
+ items[selected].querySelector("iframe").setAttribute("src",embedLink(video));
+ const stand=pageDoc.createElement("div"),player=pageDoc.createElement("iframe");player.setAttribute("src",embedLink(video));stand.append(player);
+ previewVideo(stand);views[selected].replaceChildren(...[...stand.childNodes].map(n=>frame.contentDocument.importNode(n,true)));
+ const picture=views[selected].querySelector("img");picture.addEventListener("error",()=>repairImage(picture));
+ refresh();positionToolbar();message("Video changed. Save to GitHub when finished.","ok");
 }
 
 /* ---------- Pictures ---------- */
@@ -767,6 +846,14 @@ $("viewToggle").onclick=()=>{
  requestAnimationFrame(positionToolbar);
 };
 $("sectionsButton").onclick=()=>openSections(!$("sectionsPanel").classList.contains("open"));
+const showVideoFields=()=>{$("videoFields").hidden=$("newSection").value!=="video"};
+const addVideo=()=>changeSection("add",currentSection>=0?currentSection:sectionsOf(pageDoc).length-1);
+$("newSection").onchange=showVideoFields;
+$("videoButton").onclick=()=>{$("newSection").value="video";showVideoFields();openSections(true);$("videoLink").focus()};
+$("addVideo").onclick=addVideo;
+for(const id of ["videoLink","videoHeading"])$(id).onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addVideo()}};
+$("videoUrl").onchange=changeVideo;
+$("videoUrl").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();changeVideo()}};
 $("sectionList").onclick=e=>{const b=e.target.closest("button[data-section]");if(b)changeSection(b.dataset.section,Number(b.dataset.index))};
 $("seoButton").onclick=()=>{$("seoPanel").classList.toggle("open");fillSeo();positionToolbar()};
 $("seoTitle").oninput=()=>setSeo("title",$("seoTitle").value);

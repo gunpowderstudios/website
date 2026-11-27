@@ -167,8 +167,8 @@ const $=id=>document.getElementById(id);
 let token="",pageDoc=null,originalSha="",active=null,dirty=false,uploads=[],renderedURL=[];
 const opts={headers:()=>({"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"})};
 const api=p=>"https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+p;
-function message(t,type=""){$("status").textContent=t;$("status").className="status "+type}
-function enableSave(){$("save").disabled=!(token&&pageDoc&&dirty);$("reset").disabled=!pageDoc}
+function message(t,type=""){$("status").textContent=t;$("status").className="status "+type;$("editorNotice").textContent=t;$("editorNotice").className=type||""}
+function enableSave(){const can=!!(token&&pageDoc&&dirty);$("save").disabled=!can;$("reset").disabled=!pageDoc;$("headerSave").disabled=!can;$("headerDiscard").disabled=!pageDoc;$("headerConnect").textContent=token?"Connected ✓":"Connect GitHub";$("headerDisconnect").hidden=!token}
 function toBase64(buffer){let bytes=new Uint8Array(buffer),s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)}
 async function github(path,method="GET",body=null){
  const response=await fetch(api(path),{method,headers:{...opts.headers(),...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined,cache:"no-store"});
@@ -176,7 +176,7 @@ async function github(path,method="GET",body=null){
  if(!response.ok)throw Error((json.message||"GitHub request failed")+" ("+response.status+")");
  return json;
 }
-function clearEdit(){active=null;$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value="";$("layoutEditor").classList.add("hidden")}
+function clearEdit(){active=null;$("floatingTools").classList.remove("visible","text-mode","image-mode");$("noSelection").classList.remove("hidden");$("textEditor").classList.add("hidden");$("imageEditor").classList.add("hidden");$("imageFile").value="";$("layoutEditor").classList.add("hidden")}
 function pageBase(){return new URL("../"+$("page").value.replace(/index\.html$/,""),location.href).href}
 function showPublicPreview(){const f=$("preview");f.removeAttribute("srcdoc");f.onload=null;f.src=pageBase()}
 function selectable(el){if(!el||el.closest("header,nav,footer,script,style,button,a"))return false;return !!el.closest("main")}
@@ -235,6 +235,7 @@ function bindPreview(){
   const el=e.target.closest(".editor-inline");
   if(el)endInlineEdit(el);
  },true);
+ d.addEventListener("scroll",()=>{if(active)positionToolbar(selectedIndex())},{passive:true});
  d.addEventListener("keydown",e=>{
   const el=e.target.closest(".editor-inline");
   if(el&&(e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();el.blur()}
@@ -248,7 +249,7 @@ function draw(){
  const elements=editableList(cloned);
  elements.forEach((el,i)=>{el.dataset.editorId=String(i);if(el.tagName==="IMG"&&el.dataset.pendingUpload){let upload=uploads.find(u=>u.path===el.dataset.pendingUpload);if(upload){let blobURL=URL.createObjectURL(upload.blob);renderedURL.push(blobURL);el.removeAttribute("onerror");el.src=blobURL;}}});
  $("preview").srcdoc="<!doctype html>\n"+cloned.documentElement.outerHTML;
- $("preview").onload=bindPreview;
+ $("preview").onload=()=>{bindPreview();if(active)showToolbar(selectedIndex())};
 }
 function choose(id){
  const els=editableList(pageDoc),el=els[Number(id)];if(!el)return;
@@ -258,9 +259,29 @@ function choose(id){
  if(el.tagName==="IMG"){$("imageAlt").value=el.alt||"";$("thumb").src=el.dataset.pendingUpload?(URL.createObjectURL(uploads.find(u=>u.path===el.dataset.pendingUpload).blob)):new URL(el.getAttribute("src")||"",pageBase()).href}
  else {$("textValue").value=el.textContent.trim();growTextBox()}
  updateLayoutControls();
+ showToolbar(id);
  const d=$("preview").contentDocument;if(d){d.querySelectorAll(".editor-picked").forEach(n=>n.classList.remove("editor-picked"));let selected=d.querySelector('[data-editor-id="'+id+'"]');if(selected)selected.classList.add("editor-picked")}
 }
 
+
+function showToolbar(id){
+ const bar=$("floatingTools");if(!active||!token){bar.classList.remove("visible");return}
+ bar.classList.add("visible");bar.classList.toggle("image-mode",active.tagName==="IMG");bar.classList.toggle("text-mode",active.tagName!=="IMG");
+ if(active.tagName==="IMG")$("floatImageWidth").value=Math.max(20,Math.min(100,parseFloat(active.style.width)||100));
+ else $("floatHeading").value=/^H[1-4]$/.test(active.tagName)?active.tagName:"P";
+ positionToolbar(id);
+}
+function positionToolbar(id){
+ const bar=$("floatingTools"),f=$("preview"),main=f.closest("main"),d=f.contentDocument;
+ if(!bar.classList.contains("visible")||!d)return;
+ const el=d.querySelector('[data-editor-id="'+id+'"]');if(!el)return;
+ const er=el.getBoundingClientRect(),fr=f.getBoundingClientRect(),mr=main.getBoundingClientRect();
+ const left=fr.left-mr.left+er.left;
+ const top=fr.top-mr.top+er.top;
+ bar.style.left=Math.max(8,Math.min(left,main.clientWidth-bar.offsetWidth-8))+"px";
+ bar.style.top=Math.max(8,top-bar.offsetHeight-9)+"px";
+}
+function selectedIndex(){return active?editableList(pageDoc).indexOf(active):-1}
 function numberStyle(el,prop){const v=parseFloat(el.style[prop]);return Number.isFinite(v)?v:""}
 function updateLayoutControls(){
  if(!active)return;

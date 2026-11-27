@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Free Games, Apps &amp; Experiments - Gunpowder Studios - Board Games Makers</title>
+<meta name="description" content="Being old-school gamers, whenever we get a little spare time away from making board games, we love tinkering in our digital garden shed.">
+<meta name="theme-color" content="#11100e">
+<link rel="icon" href="../images/favicon.png">
+<style>
+
+:root{--ink:#171511;--paper:#f4ead8;--cream:#fff8e8;--gold:#d99c38;--red:#a62820;--muted:#756b5b;--line:rgba(23,21,17,.14);--max:1180px;--shadow:0 22px 60px rgba(0,0,0,.18)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:#f5ecdc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}a{color:inherit}.wrap{width:min(var(--max),calc(100% - 36px));margin-inline:auto}
+.devbar{position:relative;background:#0d0c0a;color:#d8cbb7;font-size:.8rem;text-align:center;padding:.5rem 3rem}
+header{position:sticky;top:0;z-index:20;background:rgba(248,241,228,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(23,21,17,.1)}.nav{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:1.2rem}.brand{display:flex;align-items:center;gap:.8rem;text-decoration:none;font-weight:900;letter-spacing:.03em;text-transform:uppercase;line-height:1}.brand img{width:48px;height:48px;display:block;object-fit:contain}.brand small{display:block;font-size:.67rem;font-weight:650;color:var(--muted);letter-spacing:.14em;margin-top:.38rem}.links{display:flex;align-items:center;gap:1rem;font-weight:800;font-size:.92rem}.links a{text-decoration:none}.shop{padding:.72rem 1rem;border-radius:999px;color:white}.amazon{background:#232f3e}.etsy{background:#b62920}.menu{display:none;border:0;background:transparent;font-size:1.55rem}
+.intro-hero{color:#fff5e2;background:radial-gradient(circle at 78% 28%,rgba(217,156,56,.24),transparent 18rem),radial-gradient(circle at 92% 80%,rgba(166,40,32,.26),transparent 24rem),linear-gradient(125deg,#0e0d0b 0%,#251c12 55%,#100a08 100%);padding:64px 0}
+h1,h2{font-family:Georgia,"Times New Roman",serif;line-height:1.05;margin:0}h1{font-size:clamp(2.8rem,6vw,5.2rem);letter-spacing:-.045em}.intro-hero p{max-width:700px;font-size:clamp(1.05rem,1.8vw,1.28rem);color:#e1d4c0;margin:1.3rem 0 0}
+.app-list{padding:4rem 0 5.5rem}.app-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.15rem}.app{display:flex;flex-direction:column;overflow:hidden;border-radius:18px;background:#fffaf0;border:1px solid var(--line);box-shadow:0 12px 32px rgba(56,37,14,.08)}.app-media{display:block;aspect-ratio:1/1;background:#211a14}.app-media img{display:block;width:100%;height:100%;object-fit:contain}.app-body{display:flex;flex-direction:column;flex:1;padding:1.5rem}.app h2{font-size:1.75rem}.app p{color:#665c4d;margin:.75rem 0 1.25rem}.app-link{align-self:flex-start;margin-top:auto;display:inline-flex;align-items:center;min-height:46px;padding:.7rem 1.15rem;border-radius:999px;background:var(--gold);color:#21170a;font-weight:900;text-decoration:none}.app-link:hover{filter:brightness(1.07)}a:focus-visible{outline:3px solid #f89317;outline-offset:3px}
+
+footer{background:#0d0c0a;color:#a99f90;padding:2.8rem 0}.foot{display:flex;justify-content:space-between;gap:2rem;align-items:center}.foot a{color:#d8c4a1;text-decoration:none;font-weight:800}.foot{display:flex;justify-content:space-between;gap:2rem;align-items:center}.foot a{color:#d8c4a1;text-decoration:none;font-weight:800}
+@media(max-width:900px){.app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.menu{display:block}.links{display:none;position:absolute;left:18px;right:18px;top:72px;flex-direction:column;align-items:stretch;background:#f8f1e4;padding:1rem;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.links.open{display:flex}.links a{padding:.55rem .7rem}.shop{text-align:center}.brand span{font-size:.84rem}.intro-hero{padding:44px 0}.app-list{padding:2.5rem 0 4rem}.app-grid{grid-template-columns:1fr}.foot{display:block}.foot div+div{margin-top:1rem}}
+
+/* Match Amazon and Etsy header button widths */
+nav a.nav-cta, nav.links a.pill.amazon, nav.links a.pill.etsy, nav.links a.shop.amazon, nav.links a.shop.etsy {display:inline-flex;align-items:center;justify-content:center;width:210px;min-height:50px;box-sizing:border-box;text-align:center;flex-shrink:0;white-space:nowrap}
+@media(max-width:900px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:170px}}
+@media(max-width:720px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:100%;min-height:48px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="../" aria-label="Gunpowder Studios home"><img src="../images/favicon.png" alt=""><span>Gunpowder Studios<small>Board Game Makers</small></span></a>
+    <button class="menu" type="button" aria-label="Open navigation" onclick="document.querySelector('.links').classList.toggle('open')">☰</button>
+    <nav class="links"><a href="../">Home</a><a class="shop amazon" href="https://www.amazon.co.uk/stores/page/D555A78A-1CEB-4FA7-8283-CC6BA0D48D96?language=en_GB" target="_blank" rel="noopener">Shop on Amazon</a>
+      <a class="shop etsy" href="https://www.etsy.com/shop/gunpowderstudios" target="_blank" rel="noopener">Shop on Etsy</a>
+    <a href="../coming-soon/">Coming Soon</a></nav>
+  </div>
+</header>
+<main>
+<section class="intro-hero"><div class="wrap"><h1>Video Games, Apps &amp; Tools</h1><p>Being old-school gamers, whenever we get a little spare time away from making board games, we love tinkering in our digital garden shed. This is our app ideas sandbox: everything here is free to play or use, runs in your browser, and needs no logins or downloads.</p></div></section>
+<section class="app-list" aria-label="Our free games and apps"><div class="wrap app-grid">
+    <article class="app">
+      <a class="app-media" href="http://bangersandsmash.co.uk" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/10/app-icon-1.png" alt="Bangers and Smash car racing video game"></a>
+      <div class="app-body"><h2>Bangers &amp; Smash</h2><p>A free, classic-car demolition derby racing game that plays right in your browser. No downloads, no login and no account. Just jump in and smash!</p><a class="app-link" href="http://bangersandsmash.co.uk" target="_blank" rel="noopener">Play Bangers &amp; Smash ↗</a></div>
+    </article>
+    <article class="app">
+      <a class="app-media" href="https://gunpowderstudios.github.io/BOD3D/" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/09/bag-of-dungeon-video-game.jpg" alt="Bag of Dungeon video game"></a>
+      <div class="app-body"><h2>BOD3D</h2><p>A free-to-play, browser-based version of Bag of Dungeon, with no downloads or login. Your quest: get in, grab the Ring, and try to get out alive!</p><a class="app-link" href="https://gunpowderstudios.github.io/BOD3D/" target="_blank" rel="noopener">Play BOD3D ↗</a></div>
+    </article>
+    <article class="app">
+      <a class="app-media" href="http://eddithereader.co.uk" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/11/eddi-reader-logo-square.png" alt="E.D.D.i Reader - FREE Book Reader using open source AI voices"></a>
+      <div class="app-body"><h2>E.D.D.i. Reader</h2><p>E.D.D.i. stands for Electronic Digital Document Intelligence: a free reader that brings books and documents to life with natural-sounding open-source AI voices.</p><a class="app-link" href="http://eddithereader.co.uk" target="_blank" rel="noopener">Open E.D.D.i. Reader ↗</a></div>
+    </article>
+    <article class="app">
+      <a class="app-media" href="https://gunpowderstudios.github.io/shrink/" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/10/app-icon.png" alt="SHRINK 3D and app for reducing and optimising 3D files for gaming or 3D printing" loading="lazy"></a>
+      <div class="app-body"><h2>SHRINK 3D</h2><p>A free STL file and batch reduction optimisation tool for 3D gaming and printing. Shrink, repair, fuse and download!</p><a class="app-link" href="https://gunpowderstudios.github.io/shrink/" target="_blank" rel="noopener">Open SHRINK 3D ↗</a></div>
+    </article>
+    <article class="app">
+      <a class="app-media" href="https://gunpowderstudios.github.io/printworks/" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/10/printworks-icon.png" alt="Printworks App. Check it before the printer does" loading="lazy"></a>
+      <div class="app-body"><h2>PrintWorks</h2><p>A free browser-based PDF preflight tool for checking your files before they go to print. Check CMYK colours, image resolution and print readiness. Check it, fix it, and print it!</p><a class="app-link" href="https://gunpowderstudios.github.io/printworks/" target="_blank" rel="noopener">Open PrintWorks ↗</a></div>
+    </article>
+    <article class="app">
+      <a class="app-media" href="https://gunpowderstudios.itch.io/kastles-krackdown" target="_blank" rel="noopener"><img src="https://www.gunpowderstudios.co.uk/wp-content/uploads/2026/09/kastles-krackdown.jpg" alt="Kastles Krackdown video game" loading="lazy"></a>
+      <div class="app-body"><h2>Kastles Krackdown</h2><p>Play 50 free levels of medieval castle mayhem! Fling rocks, collect gems, and bring down the King and Queen. Desktop only!</p><a class="app-link" href="https://gunpowderstudios.itch.io/kastles-krackdown" target="_blank" rel="noopener">Play Kastles Krackdown ↗</a></div>
+    </article>
+</div></section>
+</main>
+<footer><div class="wrap foot"><div>© 2026 Gunpowder Studios Ltd</div><div><a href="../">Home</a> · <a href="../about-us/">About</a> · <a href="../contact-us/">Contact</a> · <a href="../apps/">Apps</a></div></div></footer>
+<script src="../amazon-country.js"></script>
+<script src="../dev-tools.js"></script>
+</body></html>

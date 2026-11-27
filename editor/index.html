@@ -20,7 +20,7 @@ input[type=text],input[type=password],textarea,select{border:1px solid #cbbca7;b
 
 /* Top controls */
 .header{background:#181410;color:#fff2dc;padding:10px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
-.header h1{font-size:1rem;margin:0}
+.header h1{font-size:1rem;margin:0}.header h1 small{font-weight:600;color:#d8cbb7;margin-left:6px}
 .header a{color:#fff2dc;text-decoration:none;font-weight:700;font-size:.85rem}
 .top-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .top-controls select{min-width:165px}
@@ -63,7 +63,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 </head>
 <body>
 <div class="header">
- <h1>Gunpowder Studios · Editor</h1>
+ <h1>Gunpowder Studios · Editor <small id="siteVersion"></small></h1>
  <div class="top-controls">
   <select id="headerPage" aria-label="Choose page">
    <option value="index.html">Homepage</option>
@@ -79,6 +79,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
    <option value="about-us/index.html">About Us</option>
    <option value="contact-us/index.html">Contact Us</option>
    <option value="shop/index.html">Shop</option>
+   <option value="apps/index.html">Apps</option>
   </select>
   <button id="viewToggle" class="secondary" aria-pressed="false" title="Preview at phone width">📱 Mobile</button>
   <button id="seoButton" class="secondary" disabled title="Page title and search description">Page SEO</button>
@@ -136,6 +137,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 </main>
 <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif" hidden>
 
+<script src="../dev-tools.js"></script>
 <script>
 "use strict";
 const OWNER="gunpowderstudios",REPO="website",BRANCH="main";
@@ -680,8 +682,11 @@ window.addEventListener("resize",positionToolbar);
 window.addEventListener("beforeunload",e=>{commitText();if(isDirty()){e.preventDefault();e.returnValue=""}});
 
 $("headerRemember").checked=!!savedToken();
+// The Edit link on each page opens the editor on that page.
+const asked=new URLSearchParams(location.search).get("page");
+if([...$("headerPage").options].some(o=>o.value===asked))$("headerPage").value=asked;
 refresh();showPublicPreview();
-message(savedToken()?"Saved token found. Click Connect saved token to start editing.":"Showing the homepage preview. Choose another page, or connect GitHub to edit.");
+message(savedToken()?"Saved token found. Click Connect saved token to start editing.":"Showing the page preview. Choose another page, or connect GitHub to edit.");
 </script>
 </body>
 </html>

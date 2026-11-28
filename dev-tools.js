@@ -2,7 +2,7 @@
    Before launch, delete this file and the <script ... dev-tools.js> line on each page. */
 (function () {
   "use strict";
-  var VERSION = "v3.15"; /* change this one line to bump the version */
+  var VERSION = "v3.16"; /* change this one line to bump the version */
   window.SITE_VERSION = VERSION;
 
   /* The editor only needs the number, which it shows in its own header. */

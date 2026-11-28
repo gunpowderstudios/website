@@ -4,7 +4,7 @@ Nothing here happens without Tim's explicit permission. The WordPress site stays
 
 ## Before launch day
 - [ ] Coming Soon pictures copied into this repository (they still load from WordPress)
-- [ ] Confirm whether privacy, cookies and product safety pages are really being retired
+- [ ] Check no packaging, listing or distributor document points to the old product safety page address
 - [ ] Check story and miniature wording against the WordPress export, and add the pictures
 - [ ] Save any pictures you still need from the WordPress Media Library
 - [ ] Optional: check the Google Search Console top pages against the redirects
@@ -26,19 +26,18 @@ Nothing here happens without Tim's explicit permission. The WordPress site stays
 Same address on the new site: `/`, `/bag-of-dungeon/`, `/book-of-dungeon/`, `/bag-of-dungeon-2/`,
 `/bag-of-dungeon-legends/`, `/bodfigures/`, `/7moons/`, `/storytokens/`,
 `/the-first-chronicle-secrets-of-the-ancients/`, `/the-second-chronicle-the-darkness/`, `/the-third-chronicle-might-of-the-shadow-army/`, `/the-fourth-chronicle-a-cure-for-the-king/`,
-`/kastles-card-game/`, `/rabbito/`, `/cheese/`, `/coming-soon/`, `/about-us/`, `/contact-us/`, `/shop/`, `/apps/`.
+`/kastles-card-game/`, `/rabbito/`, `/cheese/`, `/coming-soon/`, `/about-us/`, `/contact-us/`, `/shop/`, `/wholesale-board-games/`, `/apps/`.
 
 Everything else is being retired. Add these as 301 redirects in Cloudflare:
 
 | Old address | Redirect to |
 |---|---|
 | `/the-wasted-wizard/` and its articles | `/` |
-| `/wholesale-board-games/` | `/contact-us/` |
 | `/bod3d/` | `/apps/` |
 | `/product/...` and `/brand/...` | The matching game page |
 | `/basket/`, `/my-account/` | `/shop/` |
 | `/category/7-moons-story-tokens/` | `/storytokens/` |
-| `/privacy-policy/`, `/cookies-policy/` | **Confirm with Tim before retiring** |
-| `/gunpowder-studios-ltd-board-games-product-safety-compliance/` | **Confirm with Tim before retiring** |
+| `/privacy-policy/`, `/cookies-policy/` | `/` (retired: Tim's decision, 28 Nov 2026) |
+| `/gunpowder-studios-ltd-board-games-product-safety-compliance/` | `/contact-us/` (retired: Tim's decision, 28 Nov 2026) |
 
 Any other old address shows the "page not found" page.

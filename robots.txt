@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.gunpowderstudios.co.uk/sitemap.xml

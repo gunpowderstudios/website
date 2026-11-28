@@ -48,6 +48,9 @@ main{position:relative;flex:1;min-height:0;overflow:hidden;display:flex}
 #sectionList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 #sectionList li{border:1px solid #dbceb2;border-radius:10px;padding:8px;background:#fff}
 #sectionList li.current{border-color:#f89317;box-shadow:0 0 0 2px #f89317}
+#sectionList li.off{background:#e9e4da;border-style:dashed}
+#sectionList li.off>.name{opacity:.5}
+#sectionList li.off>.name::after{content:"Hidden";margin-left:8px;padding:1px 7px;border-radius:999px;background:#241e17;color:#fff;font-size:.66rem}
 #sectionList .name{display:block;width:100%;text-align:left;background:none;color:#241e17;padding:2px 0 7px;font-size:.82rem}
 #sectionList .row{display:flex;flex-wrap:wrap;gap:4px}
 #sectionList .row button{padding:5px 8px;font-size:.74rem;background:#eee5d5;color:#2c2317}
@@ -97,7 +100,13 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
    <option value="bag-of-dungeon/index.html">Bag of Dungeon</option>
    <option value="bag-of-dungeon-2/index.html">Bag of Dungeon 2</option>
    <option value="bag-of-dungeon-legends/index.html">Bag of Dungeon Legends</option>
-   <option value="7-moons/index.html">7 Moons</option>
+   <option value="bodfigures/index.html">Bag of Dungeon Miniatures</option>
+   <option value="7moons/index.html">7 Moons</option>
+   <option value="storytokens/index.html">Story Tokens</option>
+   <option value="the-first-chronicle-secrets-of-the-ancients/index.html">First Chronicle: Secrets of the Ancients</option>
+   <option value="the-second-chronicle-the-darkness/index.html">Second Chronicle: The Darkness</option>
+   <option value="the-third-chronicle-might-of-the-shadow-army/index.html">Third Chronicle: Might of the Shadow Army</option>
+   <option value="the-fourth-chronicle-a-cure-for-the-king/index.html">Fourth Chronicle: A Cure for the King</option>
    <option value="rabbito/index.html">Rabbito</option>
    <option value="cheese/index.html">Who Stole My Cheese?</option>
    <option value="coming-soon/index.html">Coming Soon</option>
@@ -168,7 +177,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block}
  </div>
  <aside id="sectionsPanel" aria-label="Page sections">
   <h2>Page sections</h2>
-  <p>Top to bottom. Click a name to find it on the page. Press Modules to see what is inside a section. Changes can be undone.</p>
+  <p>Top to bottom. Click a name to find it on the page. Press Modules to see what is inside a section. Hidden sections look faded here and visitors do not see them. Changes can be undone.</p>
   <label>New section style
    <select id="newSection">
     <option value="text">Heading and text</option>
@@ -317,6 +326,7 @@ function render(keepScroll=false){
  const copy=pageDoc.cloneNode(true);
  const base=copy.createElement("base");base.href=pageBase(loaded.path);copy.head.prepend(base);
  items=editableList(pageDoc);
+ copy.getElementById("gs-hidden-styles")?.remove();  // the editor still shows hidden sections, faded
  editableList(copy).forEach((el,i)=>el.dataset.editorId=String(i));
  copy.querySelectorAll("main .gs-video").forEach(previewVideo);
  // Pictures uploaded in this session are not on the live preview site yet.
@@ -355,6 +365,7 @@ function bindPreview(d){
  style.textContent="html{scroll-behavior:auto!important}"+
   (token?"[data-editor-id]{cursor:pointer!important}[data-editor-id]:hover{outline:3px dashed #f89317!important;outline-offset:3px}":"")+
   "main>.editor-section{outline:4px dashed #f89317!important;outline-offset:-4px}"+
+  "main>[data-gs-hidden]{opacity:.35!important;filter:grayscale(1)}"+
   ".editor-module{outline:4px solid #ff8125!important;outline-offset:3px}"+
   "[data-editor-id].editor-picked{outline:4px solid #ff8125!important;outline-offset:3px}"+
   "[data-editor-id].editor-inline{outline:3px solid #f89317!important;outline-offset:4px;white-space:normal!important;min-height:1.2em;cursor:text!important}";
@@ -538,10 +549,16 @@ function changeTag(tag){
 
 /* ---------- Whole sections ---------- */
 const sectionsOf=doc=>[...doc.querySelector("main").children];
+const isHidden=section=>section.hasAttribute("data-gs-hidden");
+// The rule that hides sections is only kept in the page while something is hidden.
+function syncHiddenStyles(){
+ if(sectionsOf(pageDoc).some(isHidden))ensureStyles("gs-hidden-styles","main>[data-gs-hidden]{display:none!important}");
+ else pageDoc.getElementById("gs-hidden-styles")?.remove();
+}
 let currentSection=-1;
 function sectionName(section,i){
  const heading=section.querySelector("h1,h2,h3");
- const text=(heading&&[...heading.childNodes].map(n=>n.nodeName==="BR"?" ":n.textContent).join(""))||section.getAttribute("aria-label")||section.querySelector("img[alt]:not([alt=''])")?.alt||section.querySelector("iframe[title]")?.title||section.textContent.trim()||"Picture";
+ const text=(heading&&[...heading.childNodes].map(n=>n.nodeName==="BR"?" ":n.textContent+(n.nodeType===1&&n.classList.contains("eyebrow")?": ":"")).join(""))||section.getAttribute("aria-label")||section.querySelector("img[alt]:not([alt=''])")?.alt||section.querySelector("iframe[title]")?.title||section.textContent.trim()||"Picture";
  const name=text.replace(/\s+/g," ").trim();
  return (i+1)+". "+(name.length>44?name.slice(0,43)+"…":name);
 }
@@ -553,18 +570,19 @@ function listSections(){
  // Only rebuild when something changed, so keyboard focus is not lost while typing.
  const open=all.indexOf(openSection),columns=open<0?null:modulesOf(openSection);
  const outline=columns?columns.map(c=>c.modules.map(m=>moduleName(m)+(m===pickedModule?"*":"")+itemsOf(m).map(i=>moduleName(i)+(i===pickedModule?"*":"")).join(","))).join("/"):"";
- const state=currentSection+"|"+busy+"|"+open+"|"+outline+"|"+all.map(sectionName).join("|");
+ const state=currentSection+"|"+busy+"|"+open+"|"+outline+"|"+all.map((s,i)=>sectionName(s,i)+(isHidden(s)?" (hidden)":"")).join("|");
  if(list.dataset.state===state&&list.children.length)return;
  list.dataset.state=state;
  moduleRefs=[];
  list.replaceChildren(...all.map((section,i)=>{
-  const item=document.createElement("li");item.classList.toggle("current",i===currentSection);
+  const item=document.createElement("li");item.classList.toggle("current",i===currentSection);item.classList.toggle("off",isHidden(section));
   const button=(text,action,title,off)=>{const b=document.createElement("button");b.type="button";b.textContent=text;b.dataset.section=action;b.dataset.index=i;b.title=title;b.disabled=busy||off;return b};
   const name=button(sectionName(section,i),"show","Show on the page");name.className="name";
   const row=document.createElement("div");row.className="row";
   const remove=button("Delete","delete","Delete this section");remove.className="danger";
   const toggle=button((i===open?"▾":"▸")+" Modules","modules","Show what is inside this section");toggle.className="toggle";toggle.setAttribute("aria-expanded",String(i===open));
-  row.append(toggle,button("↑","up","Move section up",i===0),button("↓","down","Move section down",i===all.length-1),button("Duplicate","duplicate","Make a copy below"),button("+ Add below","add","Add a new section below, in the style chosen above"),remove);
+  row.append(toggle,button("↑","up","Move section up",i===0),button("↓","down","Move section down",i===all.length-1),button("Duplicate","duplicate","Make a copy below"),button("+ Add below","add","Add a new section below, in the style chosen above"),
+   button(isHidden(section)?"Show":"Hide","hide",isHidden(section)?"Show this section to visitors again":"Hide this section from visitors until it is ready"),remove);
   item.append(name,row);
   if(i===open)item.append(moduleList(columns));
   return item;
@@ -626,14 +644,23 @@ function changeSection(action,i){
   // Names used by page links must stay unique, so the copy does not keep them.
   for(const el of [copy,...copy.querySelectorAll("*")])for(const attr of ["id","aria-labelledby"])el.removeAttribute(attr);
   section.after(copy);currentSection=i+1;
-  done="Section duplicated."+(copy.querySelector("h1")?" The copy has a second H1 heading: select it and change it to H2 for search engines.":"");
+  done="Section duplicated."+(isHidden(copy)?" The copy is hidden too.":"")+(copy.querySelector("h1")?" The copy has a second H1 heading: select it and change it to H2 for search engines.":"");
+ }else if(action==="hide"){
+  if(isHidden(section)){checkpoint();section.removeAttribute("data-gs-hidden");done="Section shown again. Save to put it back on the website."}
+  else{
+   if(sectionsOf(pageDoc).filter(s=>!isHidden(s)).length===1)return message("A page needs at least one section that visitors can see.","error");
+   checkpoint();section.setAttribute("data-gs-hidden","");
+   const linked=[section,...section.querySelectorAll("[id]")].some(el=>el.id&&pageDoc.querySelector('a[href="#'+el.id+'"]'));
+   done="Section hidden: faded here, and visitors will not see it after you save."+(linked?" A link on this page jumps to it and will not work while it is hidden.":"")+(section.querySelector("h1")?" It holds the main H1 heading.":"");
+  }
+  syncHiddenStyles();
  }else if(action==="delete"){
   if(sectionsOf(pageDoc).length===1)return message("A page needs at least one section.","error");
   const test=pageDoc.cloneNode(true);sectionsOf(test)[i].remove();
   if(protectedParts(test)!==loaded.guard)return message("This section holds Amazon or Etsy buttons that appear nowhere else on the page, so it cannot be deleted.","error");
   const linked=[section,...section.querySelectorAll("[id]")].some(el=>el.id&&pageDoc.querySelector('a[href="#'+el.id+'"]'));
   if(!confirm("Delete section "+sectionName(section,i)+"?"+(linked?"\n\nA button on this page jumps to this section and will stop working.":"")+"\n\nYou can bring it back with Undo."))return;
-  checkpoint();section.remove();currentSection=-1;done="Section deleted. Press Undo to bring it back.";
+  checkpoint();section.remove();syncHiddenStyles();currentSection=-1;done="Section deleted. Press Undo to bring it back.";
  }
  render(true);fillSeo();refresh();message(done,"ok");
 }

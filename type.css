@@ -36,10 +36,18 @@ main .mission,main .quote{font-weight:400}
 main :where(p,li){line-height:1.65;text-wrap:pretty}
 :where(main p){max-width:68ch}
 main :is(.eyebrow,.kicker,dt,#_){font-size:.8125rem}
-main .fact :is(span,#_){font-size:.875rem}
-main :is(.step,.game-card-body) :is(p,#_){font-size:1rem}
-main .game-card-body :is(span,#_){font-size:.9rem}
-.site-footer .copyright{font-size:.8125rem}
+main .fact :is(span,#_){font-size:.9375rem}
+main .game-card-body :is(span,#_){font-size:1rem}
+
+/* Paragraph sizes. Body text 18px */
+main :is(p,li,dd,address,#_):not(.mission,.quote){font-size:1.125rem}
+/* Cards and footer 17px */
+main :is(.step,.game-card,.card,.adventure-card,.connect-card,.world-card,.app,.feature,.range-card) :is(p,li,#_):not(.mission,.quote){font-size:1.0625rem}
+.site-footer :is(p,a,#_){font-size:1.0625rem}
+.site-footer :is(.copyright,#_),.site-footer :is(.copyright,#_) :is(p,a){font-size:.875rem}
+/* Introduction under each main headline: 20px on phones, 22px on desktop */
+main :is(.hero,.hero-slide,.intro-hero) :is(p,#_):not(.mission,.quote){font-size:clamp(1.25rem,1.8vw,1.375rem)}
+main .hero :is(p.sub,#_):not(.mission,.quote){font-size:1.125rem}
 @media (max-width:480px){main :is(.eyebrow,.kicker,#_){letter-spacing:.1em}}
 
 /* ---------- Easier-to-read colours ---------- */
@@ -50,3 +58,8 @@ main .more .card :is(span,#_){color:#8a5610}
 /* Contact page: size the email address to fit its box, so phones don't scroll sideways */
 main .info-card:has(h3 a[href^="mailto:"]){container-type:inline-size;min-width:0}
 main .info-card h3 a[href^="mailto:"]{font-size:min(1em,6.5cqi);overflow-wrap:anywhere}
+
+/* The small game name above each main headline is part of the heading */
+main h1 :is(.eyebrow,#_){font-family:"Figtree",system-ui,sans-serif;font-size-adjust:.535;line-height:1.55;text-wrap:wrap}
+/* Pictures state their size in the page (stops jumping while loading) but still scale */
+:where(img[width][height]){height:auto}

@@ -1,0 +1,52 @@
+/* Gunpowder Studios typography. Change fonts and text sizes here, for every page.
+   Fraunces and Figtree are free under the SIL Open Font License (see the fonts folder). */
+@font-face{font-family:"Figtree";font-style:normal;font-weight:300 900;font-display:swap;src:url("fonts/figtree-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/fraunces-latin-400-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/fraunces-latin-700-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Figtree";font-style:normal;font-weight:300 900;font-display:swap;src:url("fonts/figtree-latin-ext-wght-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/fraunces-latin-ext-400-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/fraunces-latin-ext-700-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+/* ---------- Which font goes where ---------- */
+/* Figtree looks small for its size, so font-size-adjust draws it about 7% larger,
+   which keeps menus and buttons as easy to read as before. Headings are left as set. */
+body{font-family:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;font-size-adjust:.535}
+h1,h2,h3,h4,.mission,.quote,.play-card strong,.site-footer :is(h2,h3,#_){font-family:"Fraunces",Georgia,serif;font-size-adjust:none}
+
+/* ---------- Headings ----------
+   ":is(...,#_)" lets these rules win over the older styles inside each page,
+   while sizes you set by hand in the editor still win over these. */
+main :is(h1,h2,h3,.slide-title,#_){font-weight:700;line-height:1.1;letter-spacing:-.015em;text-wrap:balance}
+/* Page title: 42px on phones, 80px on desktop */
+main :is(h1,.slide-title,#_){font-size:clamp(2.625rem,1.54rem + 4.27vw,5rem);margin:0;max-width:900px}
+/* Longer page titles: add class="long-title" so they sit on fewer lines */
+main :is(h1.long-title,#_){font-size:clamp(1.875rem,9.3vw,3.75rem)}
+@media (min-width:901px){main :is(h1.long-title,#_){font-size:clamp(3rem,5vw,3.875rem)}}
+/* Section heading: 32px to 52px */
+main :is(h2,#_){font-size:clamp(2rem,1.43rem + 2.25vw,3.25rem)}
+/* Card heading: 23px to 30px */
+main :is(h3,#_){font-size:clamp(1.4375rem,1.24rem + .79vw,1.875rem)}
+/* Small cards: 22px to 26px */
+main :is(.step,.game-card,.app) :is(h2,h3,#_){font-size:clamp(1.375rem,1.26rem + .45vw,1.625rem)}
+/* Large picture tiles and panels: 28px to 40px */
+main :is(.feature,.range-card,.shop-panel,.upcoming-copy) :is(h3,#_),main .info-card :is(h2,#_){font-size:clamp(1.75rem,1.41rem + 1.35vw,2.5rem)}
+
+/* ---------- Reading text ---------- */
+main .mission,main .quote{font-weight:400}
+main :where(p,li){line-height:1.65;text-wrap:pretty}
+:where(main p){max-width:68ch}
+main :is(.eyebrow,.kicker,dt,#_){font-size:.8125rem}
+main .fact :is(span,#_){font-size:.875rem}
+main :is(.step,.game-card-body) :is(p,#_){font-size:1rem}
+main .game-card-body :is(span,#_){font-size:.9rem}
+.site-footer .copyright{font-size:.8125rem}
+@media (max-width:480px){main :is(.eyebrow,.kicker,#_){letter-spacing:.1em}}
+
+/* ---------- Easier-to-read colours ---------- */
+main :is(.more,.connect,.worlds) .section-head :is(p,#_){color:#665c4d}
+main .callout-card :is(strong,#_){color:#8f4d00}
+main .more .card :is(span,#_){color:#8a5610}
+
+/* Contact page: size the email address to fit its box, so phones don't scroll sideways */
+main .info-card:has(h3 a[href^="mailto:"]){container-type:inline-size;min-width:0}
+main .info-card h3 a[href^="mailto:"]{font-size:min(1em,6.5cqi);overflow-wrap:anywhere}

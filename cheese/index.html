@@ -27,9 +27,13 @@ footer{background:#1c140d;color:#aa9474;padding:2.8rem 0}.foot{display:flex;just
 nav a.nav-cta, nav.links a.pill.amazon, nav.links a.pill.etsy, nav.links a.shop.amazon, nav.links a.shop.etsy {display:inline-flex;align-items:center;justify-content:center;width:210px;min-height:50px;box-sizing:border-box;text-align:center;flex-shrink:0;white-space:nowrap}
 @media(max-width:900px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:170px}}
 @media(max-width:720px){nav a.nav-cta,nav.links a.pill.amazon,nav.links a.pill.etsy,nav.links a.shop.amazon,nav.links a.shop.etsy{width:100%;min-height:48px}}
+
+/* Darker wash behind the headline on narrow screens, so the text stays readable over the tablecloth */
+@media(max-width:900px){.hero:after{background:linear-gradient(rgba(28,20,13,.74),rgba(28,20,13,.62) 55%,rgba(28,20,13,.3))}.hero .sub{color:#f1dfbd}}
 </style>
 <link rel="stylesheet" href="../footer.css">
 <link rel="stylesheet" href="../header.css">
+<link rel="stylesheet" href="../type.css">
 </head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="../" aria-label="Gunpowder Studios home"><img src="../images/favicon.png" alt=""><span>Gunpowder Studios<small>Board Game Makers</small></span></a><button class="menu" type="button" aria-label="Open navigation" onclick="document.querySelector('.links').classList.toggle('open')">☰</button><nav class="links"><a href="../">Home</a><a class="shop amazon" href="https://www.amazon.co.uk/dp/B0DP3D1B1Q" target="_blank" rel="noopener">Shop on Amazon</a><a class="shop etsy" href="https://www.etsy.com/shop/gunpowderstudios" target="_blank" rel="noopener">Shop on Etsy</a><a href="../coming-soon/">Coming Soon</a></nav></div></header>
